@@ -1,0 +1,16 @@
+# dsh-cost-gauge bundle patch：在 web profile 中挂载本插件（宿主半身 + 浏览器半身）。
+# 安装：dsh plugin --profile web add <目录或 git 地址>
+#
+# 可选配置（默认值如下；阈值也可直接在浮动窗齿轮里改，改完立即生效并记住）：
+#   threshold:      余额报警阈值（人民币，默认 10）
+#   baseUrl:        DeepSeek API 基地址
+#   apiKeyEnv:      存放 API Key 的凭据引用（默认 DEEPSEEK_API_KEY）
+#   refreshSeconds: 余额查询缓存秒数（默认 30）
+- insert:
+    - id: cost-gauge
+      name: 'dsh-cost-gauge'
+      config:
+        threshold: 10
+        baseUrl: 'https://api.deepseek.com'
+        apiKeyEnv: 'DEEPSEEK_API_KEY'
+        refreshSeconds: 30
