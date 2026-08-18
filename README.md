@@ -19,17 +19,17 @@ DeepSeek Harness（`dsh`）的**花费仪表**：在 Web 界面**左侧靠上**�
 PowerShell 复制整行回车（自动补齐 dsh，无需本机 git）：
 
 ```powershell
-irm https://raw.githubusercontent.com/choosejin/dsh-cost-gauge/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 ```
 
 ### 手动安装
 
 ```sh
 # 从 git 安装（需要本机有 git）
-dsh plugin --profile web add github:choosejin/dsh-cost-gauge#main
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
 
 # 无 git 时用 tarball 直链
-dsh plugin --profile web add https://github.com/choosejin/dsh-cost-gauge/archive/refs/heads/main.tar.gz
+dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/heads/main.tar.gz
 
 # 从本地目录安装（链接方式，改 lib/*.js 后刷新页面即生效）
 dsh plugin --profile web add link:/path/to/dsh-cost-gauge

@@ -4,11 +4,11 @@
   ------------------------------------------------
   推荐用法（复制整行到 PowerShell 回车，直接安装到 web profile）：
 
-    irm https://raw.githubusercontent.com/choosejin/dsh-cost-gauge/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 
   指定 profile 或分支：
 
-    irm https://raw.githubusercontent.com/choosejin/dsh-cost-gauge/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
     # 之后按提示，或手动：
     # irm .../install.ps1 | iex -Profile web -Ref main
 
@@ -20,7 +20,7 @@
 param(
   [string]$Profile = 'web',
   [string]$Ref = 'main',
-  [string]$Owner = 'choosejin',
+  [string]$Owner = 'wjingshan',
   [string]$Repo = 'dsh-cost-gauge'
 )
 
