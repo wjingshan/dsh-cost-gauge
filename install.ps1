@@ -21,7 +21,8 @@ param(
   [string]$Profile = 'web',
   [string]$Ref = 'main',
   [string]$Owner = 'wjingshan',
-  [string]$Repo = 'dsh-cost-gauge'
+  [string]$Repo = 'dsh-cost-gauge',
+  [string]$Source = ''   # 可选：本地目录或任意安装源；留空则用 GitHub tarball
 )
 
 $ErrorActionPreference = 'Stop'
@@ -50,11 +51,12 @@ function Invoke-Dsh([string[]]$Args) {
   }
 }
 
-# 2) 安装（GitHub tarball 直链，无需本机 git）
+# 2) 安装（默认 GitHub tarball 直链，无需本机 git；也可 -Source 指定本地目录）
 Write-Step "安装 $Repo 到 profile '$Profile'（ref=$Ref）"
 $tarball = "https://github.com/$Owner/$Repo/archive/refs/heads/$Ref.tar.gz"
-Write-Host "    来源：$tarball"
-Invoke-Dsh @('plugin', '--profile', $Profile, 'add', $tarball)
+$source = if ($Source) { $Source } else { $tarball }
+Write-Host "    来源：$source"
+Invoke-Dsh @('plugin', '--profile', $Profile, 'add', $source)
 Write-Ok "已安装并登记为 profile 插件层"
 
 # 3) 重启提示

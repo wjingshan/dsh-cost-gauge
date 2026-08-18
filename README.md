@@ -22,6 +22,12 @@ PowerShell 复制整行回车（自动补齐 dsh，无需本机 git）：
 irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 ```
 
+仓库尚未推送时可先用本地脚本装（`-Source` 指定本地目录）：
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install.ps1 -Source .\dsh-cost-gauge
+```
+
 ### 手动安装
 
 ```sh
