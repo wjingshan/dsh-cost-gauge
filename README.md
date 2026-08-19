@@ -74,6 +74,21 @@ dsh web
 
 > 覆盖时需完整重述该行需要的全部 config 键（patch 按行整体替换 config，不做深合并）。
 
+## 发布新版本
+
+改完代码后，用 `release.ps1` 一条命令完成：提交 → 升版本 → 推送 → 创建 GitHub Release。
+
+```powershell
+.\release.ps1 -Message "feat: 新增 xxx"                 # 默认 patch（1.0.0 → 1.0.1）
+.\release.ps1 -Type minor -Message "feat: 新增 xxx"     # minor（→ 1.1.0）
+.\release.ps1 -Version 1.2.0 -Message "feat: 新增 xxx"  # 显式版本号
+.\release.ps1 -Message "..." -DryRun                    # 预演（不真正执行）
+```
+
+- Release 说明默认从「上一个 tag 以来的提交历史」自动生成，也可 `-Notes "…"` 自定义。
+- 创建 Release 需要 PAT：设置环境变量 `GH_TOKEN`（fine-grained，仓库权限 Contents 读写），或运行时按提示输入。
+- 发版后无需改任何脚本——`install.ps1` 会自动安装最新 Release tag。
+
 ## 数据与安全
 
 - 余额经官方 `GET /user/balance` 查询，API Key 只在宿主侧解析（credentials 接缝 / 环境变量），**绝不下发浏览器**。
@@ -87,6 +102,7 @@ dsh-cost-gauge/
 ├── package.json          # dsh.bundle（宿主）+ dsh.client（浏览器）声明
 ├── cordis.patch.yml      # 插件行插入（含默认 config）
 ├── install.ps1           # 一键安装脚本（irm … | iex）
+├── release.ps1           # 一键发布脚本（提交+升版本+推送+创建 Release）
 ├── docs/
 │   └── alipay-qr.jpg     # 支付宝收款码（README 赞助区引用）
 ├── lib/
