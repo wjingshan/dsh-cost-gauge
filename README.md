@@ -76,6 +76,8 @@ dsh-cost-gauge/
 ├── package.json          # dsh.bundle（宿主）+ dsh.client（浏览器）声明
 ├── cordis.patch.yml      # 插件行插入（含默认 config）
 ├── install.ps1           # 一键安装脚本（irm … | iex）
+├── docs/
+│   └── alipay-qr.jpg     # 支付宝收款码（README 赞助区引用）
 ├── lib/
 │   ├── index.js          # 宿主半身：余额查询 + 花费统计 + 峰谷判定 + /api/cost-gauge/* 路由
 │   └── client.js         # 浏览器半身：方形浮动窗（指针表 + 红灯 + 拖动 + 阈值设置）
@@ -85,3 +87,17 @@ dsh-cost-gauge/
 ## License
 
 MIT
+
+---
+
+## ☕ 赞助
+
+如果这个插件帮到了你，欢迎请我喝杯咖啡 ☕
+
+<img src="docs/alipay-qr.jpg" alt="支付宝收款码" width="240" />
+
+<div align="center">
+
+**感谢你的支持！** 💙
+
+</div>
