@@ -6,21 +6,24 @@
 
     irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 
-  指定 profile、分支或 tag：
+  默认自动安装最新稳定版（GitHub 最新 Release tag）。
 
-    irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
-    # 之后按提示，或手动：
-    # irm .../install.ps1 | iex -Profile web -Ref main   （装 main 开发版）
+  想指定版本 / 分支 / 本地目录时，先下载脚本再带参数运行：
+
+    irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 -OutFile install-dsh-cost-gauge.ps1
+    .\install-dsh-cost-gauge.ps1                            # 自动用最新稳定版
+    .\install-dsh-cost-gauge.ps1 -Ref main                  # 装 main 开发版
+    .\install-dsh-cost-gauge.ps1 -Ref v1.0.0                # 锁指定版本
+    .\install-dsh-cost-gauge.ps1 -Source .\dsh-cost-gauge   # 本地目录
 
   说明：
-    - 默认安装锁定的稳定版 tag（v1.0.0）；想装最新开发版加 -Ref main。
     - 无需本机安装 git（使用 GitHub tarball 直链，pnpm 直接拉取）。
     - 需要 Node.js >= 20 与 DeepSeek Harness（带 dsh 命令；没有则自动用 npx）。
 #>
 [CmdletBinding()]
 param(
   [string]$Profile = 'web',
-  [string]$Ref = 'v1.0.0',      # 默认锁稳定版 tag；填分支名（如 main）则装开发版
+  [string]$Ref = '',            # 留空 = 自动用 GitHub 最新 Release tag；可填 tag（v1.0.0）或分支（main）
   [string]$Owner = 'wjingshan',
   [string]$Repo = 'dsh-cost-gauge',
   [string]$Source = ''   # 可选：本地目录或任意安装源；留空则用 GitHub tarball
@@ -52,14 +55,33 @@ function Invoke-Dsh([string[]]$Args) {
   }
 }
 
-# 2) 安装（默认 GitHub 稳定版 tag 直链，无需本机 git；也可 -Source 指定本地目录）
-Write-Step "安装 $Repo 到 profile '$Profile'（ref=$Ref）"
-# 以数字/v+数字开头的 ref 视为 tag（refs/tags/），其余视为分支（refs/heads/）
-$refPath = if ($Ref -match '^v?\d') { "refs/tags/$Ref" } else { "refs/heads/$Ref" }
-$tarball = "https://github.com/$Owner/$Repo/archive/$refPath.tar.gz"
-$source = if ($Source) { $Source } else { $tarball }
-Write-Host "    来源：$source"
-Invoke-Dsh @('plugin', '--profile', $Profile, 'add', $source)
+# 2) 解析安装来源（默认自动取最新 Release tag；也可 -Ref / -Source 指定）
+Write-Step "解析安装来源（$Repo → profile '$Profile'）…"
+if ($Source) {
+  Write-Ok "使用指定来源：$Source"
+} else {
+  if (-not $Ref) {
+    Write-Host '    未指定版本，自动获取最新 Release…'
+    try {
+      $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Owner/$Repo/releases/latest" -Headers @{ 'User-Agent' = 'dsh-cost-gauge-installer' } -TimeoutSec 15
+      if ($latest -and $latest.tag_name) { $Ref = [string]$latest.tag_name }
+    } catch {
+      Write-Warn '获取最新 Release 失败'
+    }
+    if (-not $Ref) {
+      Write-Warn '回退到默认 v1.0.0'
+      $Ref = 'v1.0.0'
+    }
+    Write-Ok "最新 Release：$Ref"
+  }
+  # 以数字/v+数字开头的 ref 视为 tag（refs/tags/），其余视为分支（refs/heads/）
+  $refPath = if ($Ref -match '^v?\d') { "refs/tags/$Ref" } else { "refs/heads/$Ref" }
+  $Source = "https://github.com/$Owner/$Repo/archive/$refPath.tar.gz"
+  Write-Ok "安装来源：$Source"
+}
+
+Write-Step "安装 $Repo 到 profile '$Profile'（ref=$Ref）…"
+Invoke-Dsh @('plugin', '--profile', $Profile, 'add', $Source)
 Write-Ok "已安装并登记为 profile 插件层"
 
 # 3) 重启提示

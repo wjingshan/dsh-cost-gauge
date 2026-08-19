@@ -22,7 +22,13 @@ PowerShell 复制整行回车（自动补齐 dsh，无需本机 git）：
 irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 ```
 
-> 一键安装默认装**锁定的稳定版 `v1.0.0`**；想装最新开发版：`irm .../install.ps1 | iex -Ref main`。
+> 一键安装**自动装最新稳定版**（GitHub 最新 Release tag，发版后无需改脚本）。想装开发版或锁指定版本，先下载脚本再带参数运行：
+>
+> ```powershell
+> irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 -OutFile install-dsh-cost-gauge.ps1
+> .\install-dsh-cost-gauge.ps1 -Ref main        # 装 main 开发版
+> .\install-dsh-cost-gauge.ps1 -Ref v1.0.0      # 锁指定版本
+> ```
 
 仓库尚未推送时可先用本地脚本装（`-Source` 指定本地目录）：
 
