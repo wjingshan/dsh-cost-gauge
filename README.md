@@ -22,20 +22,25 @@ PowerShell 复制整行回车（自动补齐 dsh，无需本机 git）：
 irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 ```
 
+> 一键安装默认装**锁定的稳定版 `v1.0.0`**；想装最新开发版：`irm .../install.ps1 | iex -Ref main`。
+
 仓库尚未推送时可先用本地脚本装（`-Source` 指定本地目录）：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1 -Source .\dsh-cost-gauge
 ```
 
-### 手动安装
+### 手动安装（默认锁稳定版 v1.0.0）
 
 ```sh
-# 从 git 安装（需要本机有 git）
-dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
+# 从 git 安装（需要本机有 git，锁稳定版 tag）
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.0.0
 
-# 无 git 时用 tarball 直链
-dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/heads/main.tar.gz
+# 无 git 时用 tarball 直链（锁稳定版）
+dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.0.0.tar.gz
+
+# 想装最新开发版（main 分支）
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
 
 # 从本地目录安装（链接方式，改 lib/*.js 后刷新页面即生效）
 dsh plugin --profile web add link:/path/to/dsh-cost-gauge

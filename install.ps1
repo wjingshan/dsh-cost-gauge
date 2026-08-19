@@ -6,20 +6,21 @@
 
     irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 
-  指定 profile 或分支：
+  指定 profile、分支或 tag：
 
     irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
     # 之后按提示，或手动：
-    # irm .../install.ps1 | iex -Profile web -Ref main
+    # irm .../install.ps1 | iex -Profile web -Ref main   （装 main 开发版）
 
   说明：
+    - 默认安装锁定的稳定版 tag（v1.0.0）；想装最新开发版加 -Ref main。
     - 无需本机安装 git（使用 GitHub tarball 直链，pnpm 直接拉取）。
     - 需要 Node.js >= 20 与 DeepSeek Harness（带 dsh 命令；没有则自动用 npx）。
 #>
 [CmdletBinding()]
 param(
   [string]$Profile = 'web',
-  [string]$Ref = 'main',
+  [string]$Ref = 'v1.0.0',      # 默认锁稳定版 tag；填分支名（如 main）则装开发版
   [string]$Owner = 'wjingshan',
   [string]$Repo = 'dsh-cost-gauge',
   [string]$Source = ''   # 可选：本地目录或任意安装源；留空则用 GitHub tarball
@@ -51,9 +52,11 @@ function Invoke-Dsh([string[]]$Args) {
   }
 }
 
-# 2) 安装（默认 GitHub tarball 直链，无需本机 git；也可 -Source 指定本地目录）
+# 2) 安装（默认 GitHub 稳定版 tag 直链，无需本机 git；也可 -Source 指定本地目录）
 Write-Step "安装 $Repo 到 profile '$Profile'（ref=$Ref）"
-$tarball = "https://github.com/$Owner/$Repo/archive/refs/heads/$Ref.tar.gz"
+# 以数字/v+数字开头的 ref 视为 tag（refs/tags/），其余视为分支（refs/heads/）
+$refPath = if ($Ref -match '^v?\d') { "refs/tags/$Ref" } else { "refs/heads/$Ref" }
+$tarball = "https://github.com/$Owner/$Repo/archive/$refPath.tar.gz"
 $source = if ($Source) { $Source } else { $tarball }
 Write-Host "    来源：$source"
 Invoke-Dsh @('plugin', '--profile', $Profile, 'add', $source)
