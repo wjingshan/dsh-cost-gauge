@@ -1,7 +1,7 @@
 {
   "name": "dsh-cost-gauge",
   "description": "DeepSeek Harness 花费仪表：左侧靠上的可缩放浮动窗，极简时钟（单时针 + 双色外圈）指示空闲/繁忙费率，可展开/缩小切换（缩小态显示话费、余额与双状态灯），余额低于阈值时红灯报警。",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
