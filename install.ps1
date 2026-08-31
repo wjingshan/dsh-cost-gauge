@@ -69,8 +69,8 @@ if ($Source) {
       Write-Warn '获取最新 Release 失败'
     }
     if (-not $Ref) {
-      Write-Warn '回退到默认 v1.0.0'
-      $Ref = 'v1.0.0'
+      Write-Warn '回退到默认 v1.0.1'
+      $Ref = 'v1.0.1'
     }
     Write-Ok "最新 Release：$Ref"
   }
