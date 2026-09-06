@@ -1,0 +1,100 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+html,body{margin:0;padding:0;background:#101318}
+body{padding:28px}
+
+.dsg-root{position:relative;z-index:1;width:216px;box-sizing:border-box;
+  container-type:inline-size;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:rgba(20,22,28,.94);color:#e5e7eb;border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.38);padding:7px 10px 9px;
+  user-select:none;-webkit-user-select:none}
+.dsg-root.dsg-collapsed{padding:8px 10px;cursor:pointer}
+.dsg-title{display:flex;align-items:center;gap:7px;cursor:grab;padding-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:7px}
+.dsg-title:active{cursor:grabbing}
+.dsg-title-text{flex:1;min-width:0;font-size:clamp(10px,6.2cqw,14px);line-height:1.2;
+  font-weight:600;color:#f3f4f6;white-space:nowrap}
+.dsg-badge{flex:none;font-size:clamp(8px,4.8cqw,11px);line-height:1;padding:.35em .55em;
+  border:1px solid rgba(255,255,255,.4);border-radius:.45em;color:#cbd5e1;font-weight:600;
+  letter-spacing:.2px;white-space:nowrap;max-width:12em;overflow:hidden;text-overflow:ellipsis}
+.dsg-badge.dsg-badge-pro{color:#fcd34d;border-color:rgba(252,211,77,.6)}
+.dsg-badge.dsg-badge-flash{color:#7dd3fc;border-color:rgba(125,211,252,.55)}
+.dsg-badge.dsg-badge-vision{color:#e879f9;border-color:rgba(232,121,249,.55)}
+.dsg-light{width:10px;height:10px;border-radius:50%;background:#4b5563;flex:none}
+.dsg-root.dsg-ok .dsg-light{background:#22c55e;box-shadow:0 0 6px 1px rgba(34,197,94,.5)}
+.dsg-root.dsg-alarm .dsg-light{background:#ef4444;animation:dsg-blink 1s ease-in-out infinite}
+@keyframes dsg-blink{0%,100%{opacity:1;box-shadow:0 0 9px 3px rgba(239,68,68,.85)}
+  50%{opacity:.12;box-shadow:none}}
+.dsg-iconbtn{flex:none;border:none;background:transparent;color:#9ca3af;cursor:pointer;
+  font-size:14px;line-height:1;padding:2px 3px;border-radius:6px}
+.dsg-iconbtn:hover{color:#e5e7eb;background:rgba(255,255,255,.08)}
+.dsg-gauge{text-align:center}
+.dsg-gauge svg{display:block;margin:0 auto;width:100%;max-width:320px;height:auto}
+.dsg-arc-bg{fill:none;stroke:rgba(255,255,255,.12);stroke-width:10;stroke-linecap:round}
+.dsg-arc-std{fill:none;stroke:#22c55e;stroke-width:10;stroke-linecap:round}
+.dsg-arc-peak{fill:none;stroke:#f59e0b;stroke-width:10;stroke-linecap:round}
+.dsg-needle{transform-box:view-box;transform-origin:70px 70px;transform:rotate(-90deg);
+  transition:transform .6s linear;filter:drop-shadow(0 0 3px rgba(255,255,255,.35))}
+.dsg-needle .dsg-hand{stroke:#ffffff;stroke-width:4;stroke-linecap:round}
+.dsg-needle .dsg-tail{stroke:rgba(255,255,255,.4);stroke-width:2;stroke-linecap:round}
+.dsg-needle .dsg-cap{fill:#ffffff}
+.dsg-ticks line{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-linecap:round}
+.dsg-ticks line.maj{stroke:rgba(255,255,255,.6)}
+.dsg-gauge-label{fill:#9ca3af;font-size:11px}
+.dsg-meta{display:flex;justify-content:center;gap:30px;margin-top:3px}
+.dsg-meta-col{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.dsg-meta-label{color:#8b8f98;font-size:10px}
+.dsg-status{font-size:12px;font-weight:600;white-space:nowrap}
+.dsg-status.dsg-std{color:#4ade80}
+.dsg-status.dsg-peak{color:#fbbf24}
+.dsg-countdown{color:#d1d5db;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dsg-rows{border-top:1px solid rgba(255,255,255,.08);padding-top:6px;margin-top:5px}
+.dsg-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;
+  color:#9ca3af;padding:3px 0}
+.dsg-val{color:#f3f4f6;font-variant-numeric:tabular-nums;font-weight:600}
+.dsg-settings{display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
+.dsg-root.dsg-settings-open .dsg-settings{display:block}
+.dsg-settings label{font-size:11px;color:#9ca3af;display:block;margin-bottom:4px}
+.dsg-threshold{width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#f3f4f6;font-size:13px;padding:6px 8px}
+.dsg-threshold:focus{outline:none;border-color:rgba(96,165,250,.6)}
+
+/* ===== 最小化态 ===== */
+.dsg-root.dsg-collapsed .dsg-title,
+.dsg-root.dsg-collapsed .dsg-gauge,
+.dsg-root.dsg-collapsed .dsg-rows,
+.dsg-root.dsg-collapsed .dsg-settings,
+.dsg-root.dsg-collapsed .dsg-resizer{display:none}
+.dsg-mini{display:none;align-items:center;gap:11px;min-height:38px;cursor:pointer}
+.dsg-root.dsg-collapsed .dsg-mini{display:flex}
+.dsg-mini-lampwrap{position:relative;width:40px;height:40px;flex:none}
+.dsg-mini-lampwrap svg{position:absolute;inset:0;width:40px;height:40px;transform:rotate(-90deg)}
+.dsg-mini-track{fill:none;stroke:rgba(255,255,255,.14);stroke-width:4;stroke-linecap:round}
+.dsg-mini-prog{fill:none;stroke:#22c55e;stroke-width:4;stroke-linecap:round;
+  transition:stroke .4s}
+.dsg-root.dsg-peak .dsg-mini-prog{stroke:#fbbf24}
+.dsg-mini-lamp{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px 0 0 -8px;
+  border-radius:50%;background:#22c55e;box-shadow:0 0 9px 2px rgba(34,197,94,.55);
+  transition:background .4s,box-shadow .4s}
+.dsg-root.dsg-peak .dsg-mini-lamp{background:#fbbf24;box-shadow:0 0 9px 2px rgba(250,204,21,.6)}
+.dsg-mini-text{display:flex;flex-direction:column;gap:1px;min-width:0}
+.dsg-mini-cost{color:#ffffff;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;
+  white-space:nowrap}
+.dsg-mini-bal{color:#9ca3af;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dsg-mini-badge{margin-left:auto;flex:none}
+.dsg-mini-hint{color:#6b7280;font-size:10px;margin-left:auto;white-space:nowrap}
+/* ===== 缩放把手 ===== */
+.dsg-resizer{position:absolute;right:3px;bottom:3px;width:12px;height:12px;cursor:nwse-resize;
+  border-right:2px solid rgba(255,255,255,.35);border-bottom:2px solid rgba(255,255,255,.35);
+  border-bottom-right-radius:3px}
+.dsg-resizer:hover{border-color:rgba(255,255,255,.75)}
+/* ===== 对话执行中：标题灯 + 最小化状态灯发光闪烁 ===== */
+.dsg-root.dsg-working .dsg-light{animation:dsg-work 1s ease-in-out infinite}
+.dsg-root.dsg-working .dsg-mini-lamp{animation:dsg-work 1s ease-in-out infinite}
+@keyframes dsg-work{
+  0%,100%{filter:brightness(1);opacity:1;box-shadow:0 0 5px 1px rgba(255,255,255,.22)}
+  50%{filter:brightness(2);opacity:.5;box-shadow:0 0 16px 6px rgba(255,255,255,.7)}}
+
+.dsg-root{width:210px}
+.dsg-title,.dsg-gauge,.dsg-rows,.dsg-settings,.dsg-resizer{display:none!important}
+</style></head><body><div class="dsg-root dsg-collapsed dsg-peak dsg-ok"><div class="dsg-mini" title="点击展开"><div class="dsg-mini-lampwrap"><svg viewBox="0 0 40 40"><circle class="dsg-mini-track" cx="20" cy="20" r="16" pathLength="100"></circle><circle class="dsg-mini-prog" cx="20" cy="20" r="16" pathLength="100" stroke-dasharray="100" stroke-dashoffset="38"></circle></svg><span class="dsg-mini-lamp"></span></div><div class="dsg-mini-text"><span class="dsg-mini-cost">¥2.57</span><span class="dsg-mini-bal">¥26.16</span></div><span class="dsg-badge dsg-badge-pro dsg-mini-badge">v4-pro</span></div><div class="dsg-settings"><label>余额报警阈值（人民币）</label><input class="dsg-threshold" type="number" value="10"></div></div></body></html>
