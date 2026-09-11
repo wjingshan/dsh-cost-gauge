@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>dsh-cost-gauge · Live preview (sample data)</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0d1015; color: #8b8f98;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  body { padding: 24px 28px; }
+  h1 { font-size: 14px; color: #e5e7eb; margin: 0 0 6px; }
+  p  { font-size: 12px; line-height: 1.8; margin: 0 0 16px; max-width: 760px; }
+  code { color: #7dd3fc; }
+  .tips { font-size: 11.5px; color: #6b7280; }
+</style>
+</head>
+<body>
+<h1>dsh-cost-gauge · 实时预览（示例数据 / live preview with sample data）</h1>
+<p>
+  这个页面用 <b>真实的 <code>lib/client.js</code></b> 渲染插件本体，只把宿主接口打桩成示例数据，
+  方便截图与查看 UI。可用查询参数控制初始状态：<br>
+  <code>?lang=zh|en</code>、<code>?panel=1</code>（打开记录面板）、<code>?settings=1</code>（打开设置）、
+  <code>?range=all|year|month|week</code>、<code>?scope=session|all</code>、<code>?view=band|model</code>。
+</p>
+<p class="tips">This page renders the real plugin client against stubbed host endpoints. Use the query parameters above to preset the language and panel state.</p>
+
+<script>
+(function () {
+  var qs = new URLSearchParams(location.search)
+  var lang = qs.get('lang') === 'en' ? 'en' : 'zh'
+  if (qs.get('bare') === '1') {
+    // 截图用：只留深色背景 + 浮窗，隐藏页头说明
+    document.addEventListener('DOMContentLoaded', function () {
+      var nodes = document.querySelectorAll('h1, p')
+      for (var i = 0; i < nodes.length; i++) nodes[i].style.display = 'none'
+      document.body.style.padding = '16px'
+    })
+  }
+
+  // 让浮窗/面板位置可复现
+  try {
+    localStorage.removeItem('dsh-cost-gauge:pos')
+    localStorage.removeItem('dsh-cost-gauge:panelPos')
+    localStorage.removeItem('dsh-cost-gauge:collapsed')
+    localStorage.removeItem('dsh-cost-gauge:size')
+    localStorage.removeItem('dsh-cost-gauge:threshold')
+  } catch (e) {}
+
+  // 示例：2026-08-24 ~ 2026-09-11 每天的账（空闲/高峰/三种模型）
+  function mk(date, std, peak, pro, flash, vision) {
+    return { date: date, std: std, peak: peak, pro: pro, flash: flash, vision: vision, total: +(std + peak).toFixed(2) }
+  }
+  var DAYS = [
+    mk('2026-08-24', 1.32, 0.86, 1.55, 0.55, 0.08),
+    mk('2026-08-25', 0.94, 0.42, 0.92, 0.38, 0.06),
+    mk('2026-08-26', 1.78, 1.24, 2.10, 0.82, 0.10),
+    mk('2026-08-27', 0.62, 0.18, 0.55, 0.22, 0.03),
+    mk('2026-08-28', 1.05, 0.74, 1.26, 0.45, 0.08),
+    mk('2026-08-31', 1.44, 0.96, 1.68, 0.62, 0.10),
+    mk('2026-09-01', 1.12, 0.68, 1.24, 0.48, 0.08),
+    mk('2026-09-02', 0.88, 0.51, 0.96, 0.37, 0.06),
+    mk('2026-09-03', 1.66, 1.08, 1.92, 0.72, 0.10),
+    mk('2026-09-04', 1.24, 0.72, 1.38, 0.50, 0.08),
+    mk('2026-09-07', 0.78, 0.34, 0.78, 0.30, 0.04),
+    mk('2026-09-08', 1.48, 0.92, 1.72, 0.60, 0.08),
+    mk('2026-09-09', 1.00, 0.50, 0.80, 0.60, 0.10),
+    mk('2026-09-10', 0.86, 0.42, 1.02, 0.26, 0.00),
+    mk('2026-09-11', 0.80, 0.60, 0.90, 0.40, 0.10)
+  ]
+
+  window.__postLog = []
+  window.fetch = function (url, opts) {
+    opts = opts || {}
+    var method = opts.method || 'GET'
+    var u = String(url)
+    var path = u.split('?')[0]
+    if (method === 'POST') window.__postLog.push({ path: path, body: opts.body ? JSON.parse(opts.body) : null })
+    function reply(o) { return Promise.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(o) } }) }
+    if (path === '/api/cost-gauge/state') {
+      var now = Date.now()
+      return reply({
+        balance: { total: 55.63, currency: 'CNY' },
+        cost: { cost: 12.34, currency: 'CNY', model: 'deepseek-v4-flash', pricingKey: 'flash', resetAt: null, tokens: {} },
+        rate: { peak: true, label: 'peak', nextSwitchAt: now + 3 * 3600e3 + 42 * 60e3, countdownSeconds: 13320, periodSeconds: 14400 },
+        threshold: 10
+      })
+    }
+    if (path === '/api/cost-gauge/records') {
+      var all = u.indexOf('scope=all') >= 0
+      return reply({
+        ok: true,
+        scope: all ? 'all' : 'session',
+        title: all ? 'All sessions' : (lang === 'en' ? 'Cost Gauge Plugin' : '花费指示器插件'),
+        sessionCount: all ? 3 : undefined,
+        resetAt: all ? null : null,
+        sinceReset: 12.34,
+        days: DAYS
+      })
+    }
+    if (path === '/api/cost-gauge/prefs') {
+      if (method === 'POST') return reply({ ok: true, excelDir: '' })
+      return reply({ ok: true, excelDir: 'D:/DeepSeek/花费记录', lastExport: '' })
+    }
+    if (path === '/api/cost-gauge/reset') return reply({ ok: true, resetAt: Date.now() })
+    if (path === '/api/cost-gauge/export') return reply({ ok: true, path: 'D:/DeepSeek/花费记录/花费指示器插件_20260824-20260911.xlsx', dir: 'D:/DeepSeek/花费记录' })
+    if (path === '/api/cost-gauge/pick-folder') return reply({ ok: true, excelDir: 'D:/DeepSeek/花费记录' })
+    return reply({ ok: true })
+  }
+
+  var ctx = {
+    effect: function (fn) { return fn() },
+    sessions: { list: { getSnapshot: function () { return { current: 'preview-session' } } } },
+    get: function (name) {
+      if (name === 'locale') return { getSnapshot: function () { return { active: lang } } }
+      return undefined
+    }
+  }
+
+  window.__ModuleLoader__ = { load: function (def) { window.__previewDef = def } }
+  window.__previewCtx = ctx
+  window.__previewQuery = qs
+})()
+</script>
+<script src="../lib/client.js"></script>
+<script>
+(function () {
+  function q(s) { return document.querySelector(s) }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
+  async function boot() {
+    if (!window.__previewDef) return
+    window.__previewDef.factory().apply(window.__previewCtx)
+    var qs = window.__previewQuery
+    await sleep(120)
+    if (!q('.dsg-root')) return
+    if (qs.get('panel') === '1') { q('.dsg-record').click(); await sleep(150) }
+    var scope = qs.get('scope')
+    if (scope === 'all' && q('.dsg-scope-btn[data-scope="all"]')) { q('.dsg-scope-btn[data-scope="all"]').click(); await sleep(120) }
+    var range = qs.get('range')
+    if (range && q('.dsg-range-btn[data-range="' + range + '"]')) { q('.dsg-range-btn[data-range="' + range + '"]').click(); await sleep(80) }
+    var view = qs.get('view')
+    if (view && q('.dsg-view-btn[data-view="' + view + '"]')) { q('.dsg-view-btn[data-view="' + view + '"]').click(); await sleep(80) }
+    if (qs.get('settings') === '1') { q('.dsg-gear').click(); await sleep(60) }
+  }
+  window.addEventListener('load', function () { setTimeout(boot, 60) })
+})()
+</script>
+</body>
+</html>

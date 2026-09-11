@@ -1,0 +1,585 @@
+<!doctype html><html><head><meta charset="utf-8"><title>dsh-cost-gauge 样子稿：记录 / 归零 / 导出 / 时间筛选与柱状图</title><style>
+html,body{margin:0;padding:0;background:#101318;color:#9ca3af;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+body{padding:28px}
+.note{max-width:680px;font-size:12px;line-height:1.8;margin-bottom:18px}
+.note b{color:#e5e7eb}
+.note code{color:#7dd3fc}
+.dsg-root{position:relative;z-index:1;width:216px;box-sizing:border-box;
+  container-type:inline-size;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  background:rgba(20,22,28,.94);color:#e5e7eb;border:1px solid rgba(255,255,255,.10);
+  border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.38);padding:7px 10px 9px;
+  user-select:none;-webkit-user-select:none}
+.dsg-title{display:flex;align-items:center;gap:7px;cursor:grab;padding-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:7px}
+.dsg-title-text{flex:1;min-width:0;font-size:clamp(10px,6.2cqw,14px);line-height:1.2;
+  font-weight:600;color:#f3f4f6;white-space:nowrap}
+.dsg-badge{flex:none;font-size:clamp(8px,4.8cqw,11px);line-height:1;padding:.35em .55em;
+  border:1px solid rgba(255,255,255,.4);border-radius:.45em;color:#cbd5e1;font-weight:600;
+  letter-spacing:.2px;white-space:nowrap;max-width:12em;overflow:hidden;text-overflow:ellipsis}
+.dsg-badge.dsg-badge-pro{color:#fcd34d;border-color:rgba(252,211,77,.6)}
+.dsg-light{width:10px;height:10px;border-radius:50%;background:#4b5563;flex:none}
+.dsg-root.dsg-ok .dsg-light{background:#22c55e;box-shadow:0 0 6px 1px rgba(34,197,94,.5)}
+.dsg-iconbtn{flex:none;border:none;background:transparent;color:#9ca3af;cursor:pointer;
+  font-size:14px;line-height:1;padding:2px 3px;border-radius:6px}
+.dsg-iconbtn:hover{color:#e5e7eb;background:rgba(255,255,255,.08)}
+.dsg-gauge{text-align:center;position:relative}
+.dsg-gauge svg{display:block;margin:0 auto;width:100%;max-width:320px;height:auto}
+.dsg-arc-std{fill:none;stroke:#22c55e;stroke-width:11;stroke-linecap:round}
+.dsg-arc-peak{fill:none;stroke:#f59e0b;stroke-width:11;stroke-linecap:round}
+.dsg-bal-track{fill:none;stroke:rgba(255,255,255,.04);stroke-width:5;stroke-linecap:round}
+.dsg-bal-fill{fill:none;stroke:url(#g);stroke-width:5;stroke-linecap:round;opacity:.5}
+.dsg-bal-mark{stroke:rgba(255,255,255,.7);stroke-width:1.5;stroke-linecap:round;opacity:.7}
+.dsg-needle{transform-box:view-box;transform-origin:70px 70px;transition:transform .6s linear;
+  filter:drop-shadow(1px 2px 3px rgba(0,0,0,.6))}
+.dsg-needle .dsg-hand-bg{stroke:rgba(0,0,0,.45);stroke-width:5;stroke-linecap:round}
+.dsg-needle .dsg-hand{stroke:#f9fafb;stroke-width:3;stroke-linecap:round}
+.dsg-needle .dsg-tail-bg{stroke:rgba(0,0,0,.3);stroke-width:3.5;stroke-linecap:round}
+.dsg-needle .dsg-tail{stroke:#f9fafb;stroke-width:1.6;stroke-linecap:round;stroke-opacity:.55}
+.dsg-needle .dsg-cap-rim{fill:none;stroke:rgba(0,0,0,.5);stroke-width:1.2}
+.dsg-needle .dsg-cap{fill:#f9fafb}
+.dsg-ticks line{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-linecap:round}
+.dsg-ticks line.maj{stroke:rgba(255,255,255,.6)}
+.dsg-meta{display:flex;justify-content:center;gap:30px;margin-top:3px}
+.dsg-meta-col{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.dsg-meta-label{color:#8b8f98;font-size:10px}
+.dsg-status{font-size:12px;font-weight:600;white-space:nowrap}
+.dsg-status.dsg-peak{color:#fbbf24}
+.dsg-countdown{color:#d1d5db;font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dsg-rows{border-top:1px solid rgba(255,255,255,.08);padding-top:6px;margin-top:5px}
+.dsg-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;
+  color:#9ca3af;padding:3px 0}
+.dsg-val{color:#f3f4f6;font-variant-numeric:tabular-nums;font-weight:600}
+.dsg-actbtn{position:absolute;top:1px;z-index:4;width:18px;height:18px;display:flex;
+  align-items:center;justify-content:center;font-size:11px;line-height:1;border-radius:5px;
+  cursor:pointer;background:transparent;border:none;color:#9ca3af;padding:0;font-family:inherit}
+.dsg-actbtn:hover{background:rgba(255,255,255,.12);color:#f3f4f6}
+.dsg-actbtn.dsg-record{left:0}
+.dsg-actbtn.dsg-zero{right:0;color:#fcd34d}
+.dsg-actbtn.dsg-zero:hover{background:rgba(252,211,77,.16);color:#fde68a}
+.dsg-actbtn.dsg-zero.confirming{width:auto;min-width:18px;padding:0 5px;font-size:10px;
+  background:rgba(239,68,68,.22);color:#fecaca}
+/* ===== 记录面板 ===== */
+.dsg-records{display:none;position:absolute;left:0;top:calc(100% + 8px);z-index:9;
+  width:580px;max-width:min(580px,92vw);background:rgba(15,17,22,.99);
+  border:1px solid rgba(255,255,255,.14);border-radius:12px;
+  box-shadow:0 18px 44px rgba(0,0,0,.6);padding:10px 12px 12px;text-align:left;
+  user-select:text;-webkit-user-select:text}
+.dsg-root.dsg-records-open .dsg-records{display:block}
+.dsg-records-head{display:flex;align-items:center;gap:8px;padding-bottom:7px;margin-bottom:8px;
+  border-bottom:1px solid rgba(255,255,255,.10)}
+.dsg-records-title{font-size:12px;color:#f3f4f6;font-weight:600;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsg-records-total{font-size:12px;color:#7dd3fc;font-weight:700;font-variant-numeric:tabular-nums}
+.dsg-records-close{border:none;background:transparent;color:#9ca3af;cursor:pointer;font-size:13px;
+  line-height:1;padding:2px 4px;border-radius:6px}
+.dsg-records-close:hover{color:#e5e7eb;background:rgba(255,255,255,.1)}
+.dsg-bar1{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.dsg-seg{display:flex;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
+  border-radius:8px;padding:2px}
+.dsg-seg button{border:none;background:transparent;color:#9ca3af;font-size:11px;cursor:pointer;
+  padding:4px 9px;border-radius:6px;font-family:inherit;white-space:nowrap}
+.dsg-seg button.active{background:rgba(96,165,250,.22);color:#dbeafe;font-weight:600}
+.dsg-actions{margin-left:auto;display:flex;align-items:center;gap:6px}
+.dsg-export,.dsg-open{display:flex;align-items:center;gap:5px;font-size:11px;cursor:pointer;
+  padding:5px 9px;border-radius:8px;font-family:inherit;white-space:nowrap}
+.dsg-export{border:1px solid rgba(34,197,94,.45);background:rgba(34,197,94,.14);color:#bbf7d0}
+.dsg-export:hover{background:rgba(34,197,94,.24);color:#dcfce7}
+.dsg-open{border:1px solid rgba(96,165,250,.45);background:rgba(96,165,250,.14);color:#bfdbfe}
+.dsg-open:hover{background:rgba(96,165,250,.24);color:#dbeafe}
+.dsg-export[disabled],.dsg-open[disabled]{opacity:.42;cursor:not-allowed;
+  border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#8b8f98}
+/* ===== 时间筛选 ===== */
+.dsg-rangebar{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.dsg-nav{display:flex;align-items:center;gap:4px}
+.dsg-nav button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);
+  color:#cbd5e1;font-size:11px;line-height:1;padding:4px 7px;border-radius:7px;cursor:pointer;
+  font-family:inherit}
+.dsg-nav button:hover:not([disabled]){background:rgba(255,255,255,.14);color:#f3f4f6}
+.dsg-nav button[disabled]{opacity:.35;cursor:not-allowed}
+.dsg-range-label{font-size:11px;color:#e5e7eb;font-weight:600;font-variant-numeric:tabular-nums}
+/* ===== 柱状图 ===== */
+.dsg-chart{position:relative;margin:2px 0 8px;padding:14px 4px 0;background:rgba(255,255,255,.025);
+  border:1px solid rgba(255,255,255,.06);border-radius:10px}
+.dsg-chart-max{position:absolute;left:8px;top:3px;font-size:9px;color:#6b7280;
+  font-variant-numeric:tabular-nums}
+.dsg-bars{display:flex;align-items:flex-end;gap:2px;height:104px}
+.dsg-bar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end;
+  align-items:stretch;cursor:default}
+.dsg-bar-stack{display:flex;flex-direction:column;justify-content:flex-end;height:100%;
+  border-radius:3px 3px 0 0;overflow:hidden;background:rgba(255,255,255,.03)}
+.dsg-bar-seg{width:100%;transition:height .25s}
+.dsg-bar-label{height:12px;line-height:12px;font-size:8px;color:#6b7280;text-align:center;
+  margin-top:2px;overflow:hidden;white-space:nowrap}
+.dsg-bar:hover .dsg-bar-stack{outline:1px solid rgba(255,255,255,.35)}
+.dsg-legend{display:flex;align-items:center;gap:10px;margin-top:6px;padding:0 8px 7px;
+  font-size:10px;color:#8b8f98;flex-wrap:wrap}
+.dsg-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;
+  vertical-align:middle}
+/* ===== 表格 ===== */
+.dsg-tablewrap{max-height:186px;overflow:auto;border-top:1px solid rgba(255,255,255,.08);
+  padding-top:4px}
+.dsg-table{width:100%;border-collapse:collapse;font-size:11px;font-variant-numeric:tabular-nums}
+.dsg-table th{position:sticky;top:0;background:rgba(15,17,22,.99);color:#6b7280;font-weight:500;
+  text-align:right;padding:3px 4px;border-bottom:1px solid rgba(255,255,255,.08);white-space:nowrap}
+.dsg-table th:first-child{text-align:left}
+.dsg-table td{color:#cbd5e1;padding:4px;text-align:right;border-bottom:1px solid rgba(255,255,255,.04)}
+.dsg-table td:first-child{text-align:left;color:#9ca3af}
+.dsg-table tr.dsg-sum td{color:#f3f4f6;font-weight:600;border-bottom:none;
+  border-top:1px solid rgba(255,255,255,.12);position:sticky;bottom:0;background:rgba(15,17,22,.99)}
+.dsg-table .dsg-cell-std{color:#4ade80}
+.dsg-table .dsg-cell-peak{color:#fbbf24}
+.dsg-records-foot{margin-top:8px;padding-top:7px;border-top:1px solid rgba(255,255,255,.08);
+  font-size:10px;color:#6b7280;line-height:1.6}
+/* ===== 设置面板 ===== */
+.dsg-settings{display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08)}
+.dsg-root.dsg-settings-open .dsg-settings{display:block}
+.dsg-settings label{font-size:11px;color:#9ca3af;display:block;margin-bottom:4px}
+.dsg-settings label + label{margin-top:9px}
+.dsg-threshold{width:100%;box-sizing:border-box;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.14);border-radius:8px;color:#f3f4f6;font-size:13px;padding:6px 8px}
+.dsg-threshold:focus{outline:none;border-color:rgba(96,165,250,.6)}
+.dsg-pathrow{display:flex;align-items:center;gap:5px}
+.dsg-path{flex:1;min-width:0;font-size:10px;line-height:1.4;color:#cbd5e1;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:7px;
+  padding:5px 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsg-path.unset{color:#6b7280}
+.dsg-mini-btn{flex:none;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);
+  color:#cbd5e1;font-size:11px;line-height:1;padding:5px 7px;border-radius:7px;cursor:pointer;
+  font-family:inherit}
+.dsg-mini-btn:hover{background:rgba(255,255,255,.14);color:#f3f4f6}
+.dsg-toast{position:absolute;left:50%;bottom:8px;transform:translateX(-50%) translateY(6px);
+  z-index:12;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;
+  background:rgba(34,197,94,.16);border:1px solid rgba(34,197,94,.5);color:#bbf7d0;
+  font-size:11px;line-height:1.3;padding:5px 9px;border-radius:10px;max-width:88%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dsg-root.dsg-toast-show .dsg-toast{opacity:1;transform:translateX(-50%) translateY(0)}
+</style></head><body>
+<div class="note">
+  <b>dsh-cost-gauge 样子稿 v4（静态预览）</b><br>
+  · 表盘区左上 <code>🗒</code> 记录 / 右上 <code>↺</code> 归零（纯图标，悬停有提示）；<br>
+  · 记录面板：<b>时间范围</b> <code>总时间 / 年 / 月 / 周</code> + <code>‹ ›</code> 切换年/月/周；<br>
+  · <b>柱状图</b>：按所选范围的时段（年→月、月→日、周→日、总时间→月）显示花费，悬停柱子看明细；<br>
+  · 视图切换 <code>峰谷拆分 / 模型拆分</code> 同时作用于柱状图和表格；<br>
+  · <code>⬇ 导出 Excel</code>（2 个工作表，随当前筛选范围）+ <code>📂 打开</code>（导出成功后激活）；<br>
+  · 设置 <code>⚙</code> 里可配置 Excel 默认保存位置（已设置则直接落盘不弹窗）。
+</div>
+<div class="dsg-root dsg-peak dsg-ok">
+  <div class="dsg-title">
+    <span class="dsg-title-text">花费指示器</span>
+    <span class="dsg-badge dsg-badge-pro">v4-pro</span>
+    <span class="dsg-light" title="余额预警灯"></span>
+    <button class="dsg-iconbtn dsg-min" type="button">—</button>
+    <button class="dsg-iconbtn dsg-gear" type="button" title="设置">⚙</button>
+  </div>
+  <div class="dsg-gauge">
+    <button class="dsg-actbtn dsg-record" type="button" title="查看本会话每日花费记录">🗒</button>
+    <button class="dsg-actbtn dsg-zero" type="button" title="会话花费归零，从此刻起重新累计">↺</button>
+    <svg width="140" height="90" viewBox="0 0 140 90">
+      <defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="23" y1="70" x2="117" y2="70">
+        <stop offset="0" stop-color="#1e6fd9"/><stop offset="1" stop-color="#59d2fe"/>
+      </linearGradient></defs>
+      <path class="dsg-bal-track" d="M 23.0 70.0 A 47 47 0 0 1 117.0 70.0"/>
+      <path class="dsg-bal-fill" d="M 23.0 70.0 A 47 47 0 0 1 113.3 51.6"/>
+      <line class="dsg-bal-mark" x1="48.8" y1="33.2" x2="44.3" y2="25.4"/>
+      <path class="dsg-arc-std" d="M 12.0 70.0 A 58 58 0 0 1 29.0 29.0 M 70.0 12.0 A 58 58 0 0 1 99.0 19.8"/>
+      <path class="dsg-arc-peak" d="M 29.0 29.0 A 58 58 0 0 1 70.0 12.0 M 99.0 19.8 A 58 58 0 0 1 128.0 70.0"/>
+      <g class="dsg-ticks"><line class="maj" x1="29.5" y1="70.0" x2="33.5" y2="70.0"/><line x1="30.9" y1="59.5" x2="34.7" y2="60.6"/><line x1="34.9" y1="49.8" x2="38.4" y2="51.8"/><line class="maj" x1="41.4" y1="41.4" x2="44.2" y2="44.2"/><line x1="49.8" y1="34.9" x2="51.8" y2="38.4"/><line x1="59.5" y1="30.9" x2="60.6" y2="34.7"/><line class="maj" x1="70.0" y1="29.5" x2="70.0" y2="33.5"/><line x1="80.5" y1="30.9" x2="79.4" y2="34.7"/><line x1="90.3" y1="34.9" x2="88.3" y2="38.4"/><line class="maj" x1="98.6" y1="41.4" x2="95.8" y2="44.2"/><line x1="105.1" y1="49.8" x2="101.6" y2="51.8"/><line x1="109.1" y1="59.5" x2="105.3" y2="60.6"/><line class="maj" x1="110.5" y1="70.0" x2="106.5" y2="70.0"/></g>
+      <g class="dsg-needle" style="transform:rotate(37.5deg)">
+        <line class="dsg-hand-bg" x1="70" y1="70" x2="70" y2="14"/><line class="dsg-hand" x1="70" y1="70" x2="70" y2="14"/>
+        <line class="dsg-tail-bg" x1="70" y1="70" x2="70" y2="79"/><line class="dsg-tail" x1="70" y1="70" x2="70" y2="79"/>
+        <circle class="dsg-cap-rim" cx="70" cy="70" r="5.5"/><circle class="dsg-cap" cx="70" cy="70" r="4"/>
+      </g>
+    </svg>
+    <div class="dsg-meta">
+      <div class="dsg-meta-col"><span class="dsg-meta-label">当前费率</span><span class="dsg-status dsg-peak">翻倍（高峰）</span></div>
+      <div class="dsg-meta-col"><span class="dsg-meta-label">距离切换</span><span class="dsg-countdown">3小时42分</span></div>
+    </div>
+    <div class="dsg-records">
+      <div class="dsg-records-head">
+        <span class="dsg-records-title">本会话 · 花费记录（统计起点 09-10 22:15 归零）</span>
+        <span class="dsg-records-total">合计 ¥0.00</span>
+        <button class="dsg-records-close" type="button" title="关闭">✕</button>
+      </div>
+      <div class="dsg-bar1">
+        <div class="dsg-seg dsg-range">
+          <button class="dsg-range-btn" data-range="all" type="button">总时间</button>
+          <button class="dsg-range-btn" data-range="year" type="button">年</button>
+          <button class="dsg-range-btn active" data-range="month" type="button">月</button>
+          <button class="dsg-range-btn" data-range="week" type="button">周</button>
+        </div>
+        <div class="dsg-nav">
+          <button class="dsg-prev" type="button" title="上一个时段">‹</button>
+          <span class="dsg-range-label">—</span>
+          <button class="dsg-next" type="button" title="下一个时段">›</button>
+        </div>
+        <div class="dsg-actions">
+          <div class="dsg-seg dsg-viewseg">
+            <button class="dsg-view-btn active" data-view="band" type="button">峰谷拆分</button>
+            <button class="dsg-view-btn" data-view="model" type="button">模型拆分</button>
+          </div>
+          <button class="dsg-export" type="button" title="导出 Excel（2 个工作表：按峰谷拆分 / 按模型拆分）">⬇ 导出</button>
+          <button class="dsg-open" type="button" title="导出后可用：打开文件所在文件夹" disabled>📂 打开</button>
+        </div>
+      </div>
+      <div class="dsg-chart">
+        <span class="dsg-chart-max"></span>
+        <div class="dsg-bars"></div>
+        <div class="dsg-legend"></div>
+      </div>
+      <div class="dsg-tablewrap"><table class="dsg-table">
+        <thead></thead><tbody></tbody>
+      </table></div>
+      <div class="dsg-records-foot">
+        按北京时间按日聚合；缓存命中/未命中/输出分桶计价。导出文件含 2 个工作表：<b>按峰谷拆分</b>、<b>按模型拆分</b>，内容跟随当前筛选范围。
+      </div>
+    </div>
+  </div>
+  <div class="dsg-rows">
+    <div class="dsg-row"><span>会话花费</span><span class="dsg-val dsg-cost">¥2.57</span></div>
+    <div class="dsg-row"><span>余额</span><span class="dsg-val dsg-balance">¥26.16</span></div>
+  </div>
+  <div class="dsg-settings">
+    <label>余额报警阈值（人民币）</label>
+    <input class="dsg-threshold" type="number" min="0" step="1" value="10" inputmode="decimal">
+    <label>Excel 默认保存位置</label>
+    <div class="dsg-pathrow">
+      <span class="dsg-path unset">未设置 — 导出时弹窗选择</span>
+      <button class="dsg-mini-btn dsg-pick" type="button" title="选择默认保存文件夹">选择</button>
+      <button class="dsg-mini-btn dsg-clearpath" type="button" title="清除默认保存位置">✕</button>
+    </div>
+  </div>
+  <div class="dsg-toast">已归零 · 会话花费重新累计</div>
+</div>
+<script>
+(function () {
+  var root = document.querySelector('.dsg-root')
+  var recBtn = root.querySelector('.dsg-record')
+  var zeroBtn = root.querySelector('.dsg-zero')
+  var closeBtn = root.querySelector('.dsg-records-close')
+  var exportBtn = root.querySelector('.dsg-export')
+  var openBtn = root.querySelector('.dsg-open')
+  var gearBtn = root.querySelector('.dsg-gear')
+  var pickBtn = root.querySelector('.dsg-pick')
+  var clearBtn = root.querySelector('.dsg-clearpath')
+  var pathEl = root.querySelector('.dsg-path')
+  var costEl = root.querySelector('.dsg-cost')
+  var rangeBtns = root.querySelectorAll('.dsg-range-btn')
+  var viewBtns = root.querySelectorAll('.dsg-view-btn')
+  var prevBtn = root.querySelector('.dsg-prev')
+  var nextBtn = root.querySelector('.dsg-next')
+  var rangeLabel = root.querySelector('.dsg-range-label')
+  var barsEl = root.querySelector('.dsg-bars')
+  var chartMaxEl = root.querySelector('.dsg-chart-max')
+  var legendEl = root.querySelector('.dsg-legend')
+  var thead = root.querySelector('.dsg-table thead')
+  var tbody = root.querySelector('.dsg-table tbody')
+  var totalEl = root.querySelector('.dsg-records-total')
+  var toastEl = root.querySelector('.dsg-toast')
+  var toastTimer = null
+  var confirmTimer = null
+
+  // ---------- 模拟数据（真实实现里来自宿主记账） ----------
+  var TODAY = '2026-09-11'
+  var DATA_FROM = '2026-06-01'
+  var DAY = {}
+  function hash(s) {
+    var x = 2166136261
+    for (var i = 0; i < s.length; i++) { x ^= s.charCodeAt(i); x = Math.imul(x, 16777619) }
+    return (x >>> 0) / 4294967296
+  }
+  function pad(n) { return String(n).padStart(2, '0') }
+  function addDays(s, n) {
+    var d = new Date(s + 'T00:00:00Z')
+    d.setUTCDate(d.getUTCDate() + n)
+    return d.toISOString().slice(0, 10)
+  }
+  ;(function buildMock() {
+    for (var ds = DATA_FROM; ds <= TODAY; ds = addDays(ds, 1)) {
+      var wd = new Date(ds + 'T00:00:00Z').getUTCDay()
+      var weekend = wd === 0 || wd === 6
+      var std = 0.45 + hash(ds + '|std') * 1.15
+      var peak = weekend ? 0 : std * (0.15 + hash(ds + '|peak') * 0.4)
+      var total = std + peak
+      var vision = ds >= '2026-08-21' ? 0.05 + hash(ds + '|vis') * 0.12 : 0
+      var pro = total * (0.42 + hash(ds + '|pro') * 0.2)
+      var flash = Math.max(0, total - pro - vision)
+      DAY[ds] = { std: std, peak: peak, total: total, pro: pro, flash: flash, vision: vision }
+    }
+  })()
+
+  // ---------- 视图状态 ----------
+  var state = { range: 'month', view: 'band', year: 2026, month: 9, weekStart: '2026-09-07' }
+  var savePath = ''
+  var lastFile = ''
+  var SAMPLE_DIR = 'D:\\DeepSeek\\花费记录'
+
+  function toast(msg, ok) {
+    toastEl.textContent = msg
+    toastEl.style.background = ok ? 'rgba(34,197,94,.16)' : 'rgba(239,68,68,.16)'
+    toastEl.style.borderColor = ok ? 'rgba(34,197,94,.5)' : 'rgba(239,68,68,.5)'
+    toastEl.style.color = ok ? '#bbf7d0' : '#fecaca'
+    root.classList.add('dsg-toast-show')
+    clearTimeout(toastTimer)
+    toastTimer = setTimeout(function () { root.classList.remove('dsg-toast-show') }, 2600)
+  }
+  function money(v) { return '¥' + (Number.isFinite(v) ? v : 0).toFixed(2) }
+  function setPath(p) {
+    savePath = p || ''
+    if (savePath) { pathEl.textContent = savePath; pathEl.classList.remove('unset') }
+    else { pathEl.textContent = '未设置 — 导出时弹窗选择'; pathEl.classList.add('unset') }
+  }
+  function sumDays(days) {
+    var g = { std: 0, peak: 0, total: 0, pro: 0, flash: 0, vision: 0 }
+    for (var i = 0; i < days.length; i++) {
+      var d = DAY[days[i]]
+      if (!d) continue
+      g.std += d.std; g.peak += d.peak; g.total += d.total
+      g.pro += d.pro; g.flash += d.flash; g.vision += d.vision
+    }
+    return g
+  }
+  function monthLastDay(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate() }
+
+  // ---------- 分组：当前范围 -> 时段列表 ----------
+  function buildGroups() {
+    var out = []
+    var allDays = Object.keys(DAY).sort()
+    if (state.range === 'all') {
+      var months = []
+      for (var i = 0; i < allDays.length; i++) {
+        var m = allDays[i].slice(0, 7)
+        if (months.indexOf(m) < 0) months.push(m)
+      }
+      months.forEach(function (m) {
+        var days = allDays.filter(function (d) { return d.slice(0, 7) === m })
+        out.push(Object.assign({ key: m, label: m.replace('-', '/') }, sumDays(days)))
+      })
+    } else if (state.range === 'year') {
+      for (var mo = 1; mo <= 12; mo++) {
+        var prefix = state.year + '-' + pad(mo)
+        var days = allDays.filter(function (d) { return d.slice(0, 7) === prefix })
+        out.push(Object.assign({ key: prefix, label: pad(mo) + '月' }, sumDays(days)))
+      }
+    } else if (state.range === 'month') {
+      var prefixM = state.year + '-' + pad(state.month)
+      var last = monthLastDay(state.year, state.month)
+      for (var dy = 1; dy <= last; dy++) {
+        var ds = prefixM + '-' + pad(dy)
+        out.push(Object.assign({ key: ds, label: pad(dy) }, sumDays(DAY[ds] ? [ds] : [])))
+      }
+    } else {
+      var wdNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+      for (var w = 0; w < 7; w++) {
+        var dw = addDays(state.weekStart, w)
+        out.push(Object.assign({ key: dw, label: wdNames[w] + ' ' + dw.slice(5) }, sumDays(DAY[dw] ? [dw] : [])))
+      }
+    }
+    return out
+  }
+
+  function rangeText() {
+    if (state.range === 'all') return '总时间'
+    if (state.range === 'year') return state.year + ' 年'
+    if (state.range === 'month') return state.year + '-' + pad(state.month)
+    return state.weekStart + ' ~ ' + addDays(state.weekStart, 6)
+  }
+
+  // ---------- 渲染 ----------
+  var SEG_COLORS = {
+    std: '#22c55e', peak: '#f59e0b',
+    pro: '#fcd34d', flash: '#7dd3fc', vision: '#e879f9'
+  }
+  function segsFor(g) {
+    return state.view === 'band'
+      ? [['std', '空闲（标准）', g.std], ['peak', '高峰（翻倍）', g.peak]]
+      : [['pro', 'v4-pro', g.pro], ['flash', 'v4-flash', g.flash], ['vision', 'flash-vision', g.vision]]
+  }
+  function render() {
+    var groups = buildGroups()
+    var total = groups.reduce(function (s, g) { return s + g.total }, 0)
+    var max = Math.max.apply(null, groups.map(function (g) { return g.total }).concat([0.0001]))
+    totalEl.textContent = '合计 ' + money(total)
+    rangeLabel.textContent = rangeText()
+    var noNav = state.range === 'all'
+    prevBtn.style.display = noNav ? 'none' : ''
+    nextBtn.style.display = noNav ? 'none' : ''
+    nextBtn.disabled = isAtLatest()
+    chartMaxEl.textContent = '最大 ' + money(max)
+
+    // 柱状图
+    var bars = ''
+    groups.forEach(function (g) {
+      var segs = segsFor(g)
+      var tip = g.label + ' · 合计 ' + money(g.total) + '\\n' +
+        segs.map(function (s) { return s[1] + ' ' + money(s[2]) }).join('\\n')
+      var inner = ''
+      segs.slice().reverse().forEach(function (s) {
+        if (s[2] <= 0) return
+        inner += '<div class="dsg-bar-seg" style="height:' + (s[2] / max * 100).toFixed(2) +
+          '%;background:' + SEG_COLORS[s[0]] + '"></div>'
+      })
+      bars += '<div class="dsg-bar" title="' + tip + '"><div class="dsg-bar-stack">' + inner +
+        '</div><div class="dsg-bar-label">' + g.label.replace(/^周./, '') + '</div></div>'
+    })
+    barsEl.innerHTML = bars
+    var legend = ''
+    ;(state.view === 'band'
+      ? [['std', '空闲（标准）'], ['peak', '高峰（翻倍）']]
+      : [['pro', 'v4-pro'], ['flash', 'v4-flash'], ['vision', 'flash-vision']]
+    ).forEach(function (s) {
+      legend += '<span><i style="background:' + SEG_COLORS[s[0]] + '"></i>' + s[1] + '</span>'
+    })
+    legendEl.innerHTML = legend
+
+    // 表格
+    var head = state.view === 'band'
+      ? ['时段', '空闲（标准）', '高峰（翻倍）', '合计']
+      : ['时段', 'v4-pro', 'v4-flash', 'flash-vision', '合计']
+    thead.innerHTML = '<tr>' + head.map(function (h) { return '<th>' + h + '</th>' }).join('') + '</tr>'
+    var rows = ''
+    var sum = { std: 0, peak: 0, total: 0, pro: 0, flash: 0, vision: 0 }
+    groups.forEach(function (g) {
+      sum.std += g.std; sum.peak += g.peak; sum.total += g.total
+      sum.pro += g.pro; sum.flash += g.flash; sum.vision += g.vision
+      rows += state.view === 'band'
+        ? '<tr><td>' + g.label + '</td><td class="dsg-cell-std">' + money(g.std) + '</td><td class="dsg-cell-peak">' +
+          money(g.peak) + '</td><td>' + money(g.total) + '</td></tr>'
+        : '<tr><td>' + g.label + '</td><td>' + money(g.pro) + '</td><td>' + money(g.flash) + '</td><td>' +
+          money(g.vision) + '</td><td>' + money(g.total) + '</td></tr>'
+    })
+    rows += state.view === 'band'
+      ? '<tr class="dsg-sum"><td>合计</td><td>' + money(sum.std) + '</td><td>' + money(sum.peak) + '</td><td>' + money(sum.total) + '</td></tr>'
+      : '<tr class="dsg-sum"><td>合计</td><td>' + money(sum.pro) + '</td><td>' + money(sum.flash) + '</td><td>' + money(sum.vision) + '</td><td>' + money(sum.total) + '</td></tr>'
+    tbody.innerHTML = rows
+    lastGroups = groups
+  }
+  var lastGroups = []
+
+  function isAtLatest() {
+    if (state.range === 'year') return state.year >= Number(TODAY.slice(0, 4))
+    if (state.range === 'month') return state.year === Number(TODAY.slice(0, 4)) && state.month >= Number(TODAY.slice(5, 7))
+    if (state.range === 'week') return state.weekStart >= weekStartOf(TODAY)
+    return true
+  }
+  function weekStartOf(s) {
+    var d = new Date(s + 'T00:00:00Z')
+    return addDays(s, -((d.getUTCDay() + 6) % 7))
+  }
+  function shiftPeriod(delta) {
+    if (state.range === 'year') { state.year += delta; return }
+    if (state.range === 'month') {
+      var m = state.month + delta, y = state.year
+      if (m < 1) { m = 12; y-- } else if (m > 12) { m = 1; y++ }
+      state.month = m; state.year = y; return
+    }
+    if (state.range === 'week') state.weekStart = addDays(state.weekStart, delta * 7)
+  }
+
+  // ---------- 交互 ----------
+  recBtn.addEventListener('click', function (e) { e.stopPropagation(); root.classList.toggle('dsg-records-open') })
+  closeBtn.addEventListener('click', function (e) { e.stopPropagation(); root.classList.remove('dsg-records-open') })
+  gearBtn.addEventListener('click', function (e) { e.stopPropagation(); root.classList.toggle('dsg-settings-open') })
+  pickBtn.addEventListener('click', function (e) { e.stopPropagation(); setPath(SAMPLE_DIR); toast('已设为默认保存位置（模拟）', true) })
+  clearBtn.addEventListener('click', function (e) { e.stopPropagation(); setPath(''); toast('已清除默认保存位置', true) })
+
+  Array.prototype.forEach.call(rangeBtns, function (b) {
+    b.addEventListener('click', function () {
+      state.range = this.getAttribute('data-range')
+      Array.prototype.forEach.call(rangeBtns, function (x) { x.classList.toggle('active', x === b) })
+      render()
+    })
+  })
+  Array.prototype.forEach.call(viewBtns, function (b) {
+    b.addEventListener('click', function () {
+      state.view = this.getAttribute('data-view')
+      Array.prototype.forEach.call(viewBtns, function (x) { x.classList.toggle('active', x === b) })
+      render()
+    })
+  })
+  prevBtn.addEventListener('click', function () { shiftPeriod(-1); render() })
+  nextBtn.addEventListener('click', function () { shiftPeriod(1); render() })
+
+  // ---------- 导出 Excel（Excel 2003 XML，多工作表） ----------
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }
+  function sheetXml(name, head, rows) {
+    var out = '<Worksheet ss:Name="' + esc(name) + '"><Table><Row>' +
+      head.map(function (h) { return '<Cell><Data ss:Type="String">' + esc(h) + '</Data></Cell>' }).join('') + '</Row>'
+    rows.forEach(function (r) {
+      out += '<Row>' + r.map(function (v) {
+        return '<Cell><Data ss:Type="' + (typeof v === 'number' ? 'Number' : 'String') + '">' + esc(v) + '</Data></Cell>'
+      }).join('') + '</Row>'
+    })
+    return out + '</Table></Worksheet>'
+  }
+  function buildXls() {
+    var groups = lastGroups
+    var sum = groups.reduce(function (a, g) {
+      a.std += g.std; a.peak += g.peak; a.total += g.total
+      a.pro += g.pro; a.flash += g.flash; a.vision += g.vision
+      return a
+    }, { std: 0, peak: 0, total: 0, pro: 0, flash: 0, vision: 0 })
+    var band = sheetXml('按峰谷拆分', ['时段', '空闲（标准）', '高峰（翻倍）', '合计'],
+      groups.map(function (g) { return [g.label, +g.std.toFixed(2), +g.peak.toFixed(2), +g.total.toFixed(2)] })
+        .concat([['合计', +sum.std.toFixed(2), +sum.peak.toFixed(2), +sum.total.toFixed(2)]]))
+    var model = sheetXml('按模型拆分', ['时段', 'v4-pro', 'v4-flash', 'flash-vision', '合计'],
+      groups.map(function (g) { return [g.label, +g.pro.toFixed(2), +g.flash.toFixed(2), +g.vision.toFixed(2), +g.total.toFixed(2)] })
+        .concat([['合计', +sum.pro.toFixed(2), +sum.flash.toFixed(2), +sum.vision.toFixed(2), +sum.total.toFixed(2)]]))
+    return '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n' +
+      '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" ' +
+      'xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">' +
+      band + model + '</Workbook>'
+  }
+  window.__mockXls = buildXls
+  exportBtn.addEventListener('click', function (e) {
+    e.stopPropagation()
+    var usedDefault = !!savePath
+    if (!usedDefault) setPath(SAMPLE_DIR)   // 真实实现：宿主弹原生文件夹选择框并记住
+    var blob = new Blob([buildXls()], { type: 'application/vnd.ms-excel;charset=utf-8' })
+    var a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = 'dsh-cost-gauge-花费记录-' + rangeText().replace(/[\\/:*?"<>|\s~]/g, '') + '.xls'
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove() }, 0)
+    lastFile = savePath + '\\' + a.download
+    openBtn.disabled = false
+    toast(usedDefault ? '已保存到默认位置（未弹窗）：' + savePath : '已选择文件夹并记为默认位置，文件已保存', true)
+  })
+  openBtn.addEventListener('click', function (e) {
+    e.stopPropagation()
+    if (openBtn.disabled) return
+    toast('已在资源管理器中定位：' + lastFile, true)
+  })
+
+  // ---------- 归零 ----------
+  zeroBtn.addEventListener('click', function (e) {
+    e.stopPropagation()
+    if (zeroBtn.dataset.confirm !== '1') {
+      zeroBtn.dataset.confirm = '1'
+      zeroBtn.classList.add('confirming')
+      zeroBtn.textContent = '确认？'
+      zeroBtn.title = '再点一次确认归零'
+      clearTimeout(confirmTimer)
+      confirmTimer = setTimeout(function () {
+        zeroBtn.dataset.confirm = '0'
+        zeroBtn.classList.remove('confirming')
+        zeroBtn.textContent = '↺'
+        zeroBtn.title = '会话花费归零，从此刻起重新累计'
+      }, 2500)
+      return
+    }
+    zeroBtn.dataset.confirm = '0'
+    zeroBtn.classList.remove('confirming')
+    zeroBtn.textContent = '↺'
+    zeroBtn.title = '会话花费归零，从此刻起重新累计'
+    costEl.textContent = '¥0.00'
+    toast('已归零 · 会话花费重新累计', true)
+  })
+
+  setPath('')
+  render()
+})()
+</script>
+</body></html>

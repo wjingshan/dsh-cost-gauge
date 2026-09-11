@@ -1,0 +1,162 @@
+<!doctype html><html><head><meta charset="utf-8"><title>dsh-cost-gauge：只内缩黄段（绿段不动）</title><style>
+html,body{margin:0;padding:0;background:#101318;color:#9ca3af;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+body{padding:26px}
+h1{font-size:15px;color:#f3f4f6;margin:0 0 6px}
+.note{max-width:940px;font-size:12px;line-height:1.85;margin-bottom:14px}
+.note code{color:#7dd3fc}
+.note b{color:#e5e7eb}
+.controls{display:flex;gap:10px;align-items:center;font-size:11.5px;margin-bottom:12px}
+.controls label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.wrap{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.card{background:rgba(20,22,28,.94);border:1px solid rgba(255,255,255,.10);border-radius:14px;
+  padding:10px 12px 12px;box-shadow:0 10px 30px rgba(0,0,0,.38);width:320px}
+.card h2{font-size:12px;color:#e5e7eb;margin:0 0 2px;font-weight:600}
+.card .sub{font-size:10.5px;color:#8b8f98;margin-bottom:6px;line-height:1.5}
+.card.bad h2{color:#fca5a5}
+.card.good h2{color:#86efac}
+svg{display:block;width:100%;height:auto}
+.arc-std{fill:none;stroke:#22c55e;stroke-width:11;stroke-linecap:round}
+.arc-peak{fill:none;stroke:#f59e0b;stroke-width:11;stroke-linecap:round}
+.guide{stroke:rgba(255,255,255,.6);stroke-width:.7;stroke-dasharray:2 2}
+.guide-label{fill:#cbd5e1;font-size:6px}
+.tick line{stroke:rgba(255,255,255,.22);stroke-width:1;stroke-linecap:round}
+.metric{font-size:11px;color:#8b8f98;margin-top:8px;line-height:1.7}
+.metric b{color:#fcd34d}
+.metric.good b{color:#86efac}
+.zoomrow{display:flex;gap:20px;flex-wrap:wrap;margin-top:20px}
+.zoomcard{background:rgba(20,22,28,.94);border:1px solid rgba(255,255,255,.10);border-radius:14px;
+  padding:10px 12px 12px;width:290px}
+.zoomcard h3{font-size:11.5px;margin:0 0 6px;font-weight:600}
+.zoomcard.bad h3{color:#fca5a5}
+.zoomcard.good h3{color:#86efac}
+.zoomcard.mid h3{color:#cbd5e1}
+.zoombox{position:relative;border-radius:10px;overflow:hidden;background:rgba(255,255,255,.03)}
+.zoombox svg{width:100%;height:auto}
+.zoombox .tag{position:absolute;left:8px;top:6px;font-size:10px;color:#fca5a5}
+.zoombox.good .tag{color:#86efac}
+.zoombox.mid .tag{color:#cbd5e1}
+.legend{display:flex;gap:16px;font-size:11px;margin:12px 0 4px;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+</style></head><body>
+<h1>只内缩黄段（高峰）；绿段保持原样</h1>
+<div class="note">
+  线宽 <code>11</code> → 圆头半径 <b>5.5</b>；圆弧半径 <code>R=58</code>，15° = 1 小时 →
+  圆头占用 <b>5.433° ≈ 21.7 分钟</b>。<br>
+  本次只把<b>黄段</b>在<b>内部边界</b>（9:00 / 12:00 / 14:00）的一端内缩 5.433° 绘制，圆头外缘正好压线；
+  <b>绿段不做任何改动</b>，黄段在 <b>18:00</b> 的端头也<b>不内缩</b>（保持原来的圆头外观，与表盘两端一致）。
+  由于黄段在 SVG 中绘制于绿段之上，内部边界处绿段的圆头会被黄段盖住，所以可见边界依然精确。
+</div>
+<div class="controls">
+  <label><input type="checkbox" id="cbGuide" checked> 显示时间边界参考线</label>
+</div>
+<div class="wrap">
+  <div class="card bad">
+    <h2>① 当前：绿黄都不内缩</h2>
+    <div class="sub">黄段两端外溢，越过 9:00 / 12:00</div>
+    <svg id="svgA" viewBox="0 0 140 90"></svg>
+    <div class="metric">9:00–12:00 实际显示 ≈ <b>8:38 – 12:22</b></div>
+  </div>
+  <div class="card good">
+    <h2>② 修正：只缩黄段内部边界（采用）</h2>
+    <div class="sub">9:00 / 12:00 / 14:00 压线；18:00 端头保留圆头，绿段完全没动</div>
+    <svg id="svgB" viewBox="0 0 140 90"></svg>
+    <div class="metric good">9:00–12:00 与 14:00 精确压线；<b>18:00 端头保持原样</b></div>
+  </div>
+</div>
+<div class="legend">
+  <span><i style="background:#22c55e"></i>空闲（标准，保持原样）</span>
+  <span><i style="background:#f59e0b"></i>高峰（翻倍，端点内缩）</span>
+  <span><i style="background:rgba(255,255,255,.55)"></i>时间边界</span>
+</div>
+<div class="zoomrow">
+  <div class="zoomcard bad">
+    <h3>9:00 边界放大（① 当前）</h3>
+    <div class="zoombox bad"><span class="tag">黄段越过边界</span><svg id="zoomA" viewBox="14 14 34 34"></svg></div>
+  </div>
+  <div class="zoomcard good">
+    <h3>9:00 边界放大（② 只缩黄段）</h3>
+    <div class="zoombox good"><span class="tag">黄段圆头压线</span><svg id="zoomB" viewBox="14 14 34 34"></svg></div>
+  </div>
+  <div class="zoomcard mid">
+    <h3>18:00 端头放大（② 本次不缩）</h3>
+    <div class="zoombox mid"><span class="tag">圆头保留原样</span><svg id="zoomC" viewBox="100 48 40 40"></svg></div>
+  </div>
+</div>
+<script>
+(function () {
+  var R = 58
+  var W = 11
+  var CAP = (W / 2) / R * 180 / Math.PI // ≈ 5.433°
+  function arcXY(p, r) {
+    var a = (180 - p) * Math.PI / 180
+    return [70 + r * Math.cos(a), 70 - r * Math.sin(a)]
+  }
+  function arcD(a, b, r) {
+    var p1 = arcXY(a, r), p2 = arcXY(b, r)
+    return 'M ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + ' A ' + r + ' ' + r + ' 0 0 1 ' +
+      p2[0].toFixed(1) + ' ' + p2[1].toFixed(1)
+  }
+  // insetPeak=false → 当前（绿黄都不缩）；true → 只缩黄段的内部边界（9:00 / 12:00 / 14:00），18:00 端头不缩
+  function arcs(insetPeak) {
+    var std = arcD(0, 45, R) + ' ' + arcD(90, 120, R)              // 绿段：始终不动
+    var peak = insetPeak
+      ? arcD(45 + CAP, 90 - CAP, R) + ' ' + arcD(120 + CAP, 180, R)
+      : arcD(45, 90, R) + arcD(120, 180, R)
+    return { std: std, peak: peak }
+  }
+  var BOUNDS = [[0, '6:00'], [45, '9:00'], [90, '12:00'], [120, '14:00'], [180, '18:00']]
+  function ticks() {
+    var out = ''
+    for (var p = 0; p <= 180; p += 15) {
+      var a = arcXY(p, 40.5), b = arcXY(p, 36.5)
+      out += '<line' + (p % 45 === 0 ? ' class="maj"' : '') + ' x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) +
+        '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '"/>'
+    }
+    return out
+  }
+  function guides(show) {
+    if (!show) return ''
+    var out = ''
+    BOUNDS.forEach(function (b) {
+      var i = arcXY(b[0], 51), o = arcXY(b[0], 65), t = arcXY(b[0], 72)
+      out += '<line class="guide" x1="' + i[0].toFixed(1) + '" y1="' + i[1].toFixed(1) +
+        '" x2="' + o[0].toFixed(1) + '" y2="' + o[1].toFixed(1) + '"/>' +
+        '<text class="guide-label" x="' + (t[0] - 6).toFixed(1) + '" y="' + (t[1] + 2).toFixed(1) + '">' + b[1] + '</text>'
+    })
+    return out
+  }
+  function dial(insetPeak, showGuides) {
+    var a = arcs(insetPeak)
+    // 注意顺序：先绿后黄（黄在上层），与插件一致
+    return '<path class="arc-std" d="' + a.std + '"/><path class="arc-peak" d="' + a.peak + '"/>' +
+      '<g class="tick">' + ticks() + '</g>' + guides(showGuides)
+  }
+  function zoom(insetPeak) {
+    var a = arcs(insetPeak)
+    var i = arcXY(45, 40), o = arcXY(45, 78)
+    return '<path class="arc-std" d="' + a.std + '"/><path class="arc-peak" d="' + a.peak + '"/>' +
+      '<line class="guide" x1="' + i[0].toFixed(1) + '" y1="' + i[1].toFixed(1) +
+      '" x2="' + o[0].toFixed(1) + '" y2="' + o[1].toFixed(1) + '"/>'
+  }
+  // 18:00 端头（p=180，表盘右端）：本次不内缩，圆头保持原样
+
+  function zoomEdge() {
+    var a = arcs(true)
+    var i = arcXY(180, 40), o = arcXY(180, 76)
+    return '<path class="arc-std" d="' + a.std + '"/><path class="arc-peak" d="' + a.peak + '"/>' +
+      '<line class="guide" x1="' + i[0].toFixed(1) + '" y1="' + i[1].toFixed(1) +
+      '" x2="' + o[0].toFixed(1) + '" y2="' + o[1].toFixed(1) + '"/>'
+  }
+  function render(showGuides) {
+    document.getElementById('svgA').innerHTML = dial(false, showGuides)
+    document.getElementById('svgB').innerHTML = dial(true, showGuides)
+    document.getElementById('zoomA').innerHTML = zoom(false)
+    document.getElementById('zoomB').innerHTML = zoom(true)
+    document.getElementById('zoomC').innerHTML = zoomEdge()
+  }
+  document.getElementById('cbGuide').addEventListener('change', function () { render(this.checked) })
+  render(true)
+})()
+</script>
+</body></html>

@@ -11,6 +11,7 @@
   },
   "files": [
     "lib/index.js",
+    "lib/ledger.js",
     "lib/client.js",
     "cordis.patch.yml",
     "README.md"
