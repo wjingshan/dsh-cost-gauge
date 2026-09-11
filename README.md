@@ -59,7 +59,7 @@ irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 
 > ```powershell
 > irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 -OutFile install-dsh-cost-gauge.ps1
 > .\install-dsh-cost-gauge.ps1 -Ref main        # 装 main 开发版
-> .\install-dsh-cost-gauge.ps1 -Ref v1.0.0      # 锁指定版本
+> .\install-dsh-cost-gauge.ps1 -Ref v1.3.1      # 锁指定版本
 > ```
 
 仓库尚未推送时可先用本地脚本装（`-Source` 指定本地目录）：
@@ -68,14 +68,14 @@ irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 
 powershell -ExecutionPolicy Bypass -File .\install.ps1 -Source .\dsh-cost-gauge
 ```
 
-### 手动安装（默认锁稳定版 v1.0.0）
+### 手动安装（示例锁 v1.3.1，可换成任意 Release tag）
 
 ```sh
 # 从 git 安装（需要本机有 git，锁稳定版 tag）
-dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.0.0
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.3.1
 
 # 无 git 时用 tarball 直链（锁稳定版）
-dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.0.0.tar.gz
+dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.3.1.tar.gz
 
 # 想装最新开发版（main 分支）
 dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
