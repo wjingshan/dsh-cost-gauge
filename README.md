@@ -143,6 +143,16 @@ dsh-cost-gauge/
 └── README.md
 ```
 
+## 反馈与建议
+
+用得顺手、有想法，或者踩到坑了，都欢迎到 [Issues](https://github.com/wjingshan/dsh-cost-gauge/issues) 说一声——我会尽量回复。
+
+- 🐛 **报 Bug**：附上 dsh 版本、插件版本和复现步骤；有截图最好（浮动窗截图最直观）。
+- 💡 **提建议 / 新功能**：直接开 issue 描述使用场景即可，不必先写实现方案。
+- ⭐ **觉得好用**：点个 Star 就是最实在的支持，也能让更多人看到这个插件。
+
+> 想直接提交代码的话，建议先开个 issue 对齐思路再发 PR，避免白做。
+
 ## License
 
 MIT
