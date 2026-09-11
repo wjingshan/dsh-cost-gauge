@@ -23,10 +23,24 @@
     "dsh",
     "dsh-plugin",
     "cost",
-    "balance",
+    "cost-tracking",
+    "session-cost",
+    "usage",
+    "token-usage",
+    "spend",
     "billing",
+    "pricing",
+    "peak-off-peak",
+    "balance",
+    "budget",
+    "alarm",
     "gauge",
-    "peak-off-peak"
+    "dashboard",
+    "floating-widget",
+    "峰谷",
+    "计费",
+    "花费",
+    "余额"
   ],
   "dsh": {
     "bundle": {
