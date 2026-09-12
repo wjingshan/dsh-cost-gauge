@@ -14,6 +14,11 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 
 ## What's new in v1.5.0
 
+| Settings: the new “frosted glass over the chat” switch |
+| --- |
+| <img src="docs/screenshot-settings-150.png" width="215" alt="Settings: balance threshold, default Excel folder and the new frosted-glass switch"> |
+
+
 - **Auto step-aside when the window is resized**: after you stretch or resize the window, if the widget covers the middle conversation **text column** it moves into the **blank gap between the text column and the sidebar** — centred in that gap and placed in its **lower part** (flush with the bottom of the window; if that would cover the composer it stops 8px above it). Only when the gap is too narrow does it fall back to the sidebar column.
   - Priority: **middle text column (never covered) > bottom composer > sidebars**; ties keep "left stays left, right stays right" with the smallest movement.
   - Triggered only by **window resizes** (150 ms debounce); it never fights a manual drag and is skipped in the narrow strip mode.
