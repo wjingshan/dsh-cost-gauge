@@ -12,6 +12,18 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | --- | --- |
 | <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
 
+## What's new in v1.5.2
+
+| Settings: frost strength / transparency | Before and after (left: off, right: on) |
+| --- | --- |
+| <img src="docs/screenshot-frost-settings.png" width="180" alt="Settings: frost strength and transparency sliders"> | <img src="docs/screenshot-frost.png" width="430" alt="Frosted glass before/after: the title bar stays untouched, the area below fades into translucent frost"> |
+
+- **Adjustable frost strength and transparency** (two sliders in the settings panel, applied live and remembered):
+  - **Frost** `0–24px` — blur radius, higher is hazier (0 keeps only the translucent tint);
+  - **Transparency** `0–100%` — higher is more see-through and less milky.
+- **The title bar is never frosted**: the frost only applies below it, so the drag handle stays crisp for locating and grabbing the widget.
+- **Soft gradient edges instead of a hard line**: the transition width follows the frost strength (5–18px). The hole is built as "horizontal complement ∪ vertical complement" (De Morgan) in the background mask, and the frost layer uses the same shape as its mask, so both fade out together.
+
 ## What's new in v1.5.1
 
 | Same spot, side by side: off (left) / frosted (right) |
