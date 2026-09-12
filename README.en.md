@@ -86,7 +86,7 @@ irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 
 ```powershell
 irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 -OutFile install-dsh-cost-gauge.ps1
 .\install-dsh-cost-gauge.ps1 -Ref main        # development (main)
-.\install-dsh-cost-gauge.ps1 -Ref v1.3.1      # pin a tag
+.\install-dsh-cost-gauge.ps1 -Ref v1.5.0      # pin a tag
 ```
 
 ### Manual install
@@ -94,10 +94,10 @@ irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 
 ```sh
 # from git (requires git on this machine)
 dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
-dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.3.1
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.5.0
 
 # tarball, no git required
-dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.3.1.tar.gz
+dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.5.0.tar.gz
 
 # local directory (linked; edits to lib/*.js take effect after a page refresh)
 dsh plugin --profile web add link:/path/to/dsh-cost-gauge
