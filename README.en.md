@@ -12,6 +12,16 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | --- | --- |
 | <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
 
+## What's new in v1.5.1
+
+| Same spot, side by side: off (left) / frosted (right) |
+| --- |
+| <img src="docs/screenshot-frost.png" width="470" alt="Frosted glass before/after: plain widget on the left, translucent frosted overlap on the right"> |
+
+- **The frost is actually visible now**: the layer used to be just 5% white plus `blur(12px)` — blurring a flat dark chat background yields the same flat dark background, so nothing seemed to change. It is now a **milky gradient + slight brightening + inner hairline** (`blur(9px) saturate(1.2) brightness(1.12)`): measured on the same patch the luminance goes **29 → 83**, while the blurred text behind keeps its structure.
+- **Can't find the switch?** While the frost is off, covering the conversation text (overlap ≥ 35% of the widget) now shows a **one-time hint**: enable “Frosted glass over the chat area” in settings.
+- **Fixed: the widget could get stuck in the top-left corner** — loading in a minimized window / background tab (viewport 0×0) made the viewport clamp compute a position of (0,0) and persist it; the clamp is now skipped when the viewport is 0.
+
 ## What's new in v1.5.0
 
 | Settings: the new “frosted glass over the chat” switch |
