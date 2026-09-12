@@ -18,7 +18,7 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | --- |
 | <img src="docs/screenshot-narrow.png" width="120" alt="Vertical mini: status lamp + cost + balance + model badge"> |
 
-- **Viewport-aware vertical mini**: a `ResizeObserver` watches the viewport width; below **780px** the gauge switches to a 48px-wide **vertical mini** (top to bottom: status lamp → session cost → balance → model badge, rendered vertically) and **expands again on click**. When the window grows back above **860px** the previous expanded/collapsed state is restored.
+- **Viewport-aware vertical mini**: a `ResizeObserver` watches the viewport width; at **779px or less** the gauge switches to a 48px-wide **vertical mini** (top to bottom: status lamp → session cost → balance → model badge, rendered vertically) and **expands again on click**. When the window grows back to **860px or more** the previous expanded/collapsed state is restored.
   - **Hysteresis** (enter 780 / exit 860) prevents flicker at the threshold; after you manually expand from the mini strip it stays expanded until the window grows past 860px again.
   - Thresholds can be overridden via `localStorage` keys `dsh-cost-gauge:narrowEnter` / `dsh-cost-gauge:narrowExit`.
 
@@ -38,7 +38,7 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 ## Features
 
 - 🔲 **Floating window** — sits near the upper left by default, drag it by the title bar; the position is remembered.
-- 📱 **Viewport-aware** — when the viewport gets narrow (< 780px) the gauge collapses into a **48px vertical mini** (lamp + cost + balance + model badge); click to expand, and it restores automatically above 860px.
+- 📱 **Viewport-aware** — when the viewport gets narrow (≤ 779px) the gauge collapses into a **48px vertical mini** (lamp + cost + balance + model badge); click to expand, and it restores automatically at 860px or more.
 - 💰 **Session cost** — token usage priced with the official peak/off-peak rates (cache miss / cache hit / output priced separately).
   - **Per-event pricing**: usage produced during off-peak hours is charged at the off-peak rate and usage produced during peak hours at the peak rate, then summed. Entering the peak window does **not** re-price earlier off-peak usage.
 - 🧭 **Rate hand** — the dial shows the current rate band and the countdown to the next switch.
