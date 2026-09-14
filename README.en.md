@@ -12,6 +12,12 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | --- | --- |
 | <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
 
+## What's new in v1.5.3
+
+- **Fixed: session spend could stop updating (out-of-range ledger cursor)**: after a session log is compacted or rewritten its seq space shrinks, while the persisted `cursor` stays in the old space — so `snapshotEvents(cursor, log end)` returns an empty array forever and new events are never folded in (session spend freezes, or stays at ¥0.00 after a reset). The session's ledger entry is now rebuilt from the current log whenever `cursor > session.seq`.
+- **Fixed: the dial hand ran backwards after midnight**: the 00:00–06:00 branch of `dialPosOfHour()` had the wrong direction (`90 - 15t`), so the hand turned back after reaching the top. Both halves now sweep left → top → right: night **18:00 left → 24:00 top → 06:00 right**, day 06:00 left → 12:00 top → 18:00 right, with instant jumps at 06:00 and 18:00.
+- **Version shown at the bottom of the settings panel**: the host returns `version` (read from `package.json`) in `/state`, and the settings panel shows `dsh-cost-gauge vX.Y.Z` in 10px muted text; the row hides itself when no version is available.
+
 ## What's new in v1.5.2
 
 | Settings: frost strength / transparency | Before and after (left: off, right: on) |
