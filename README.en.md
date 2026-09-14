@@ -127,15 +127,15 @@ dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
 dsh plugin --profile web add link:/path/to/dsh-cost-gauge
 
 # pinned version (not recommended — see the note below: the market will not update it)
-dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.5.4
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.5.5
 
 # tarball, no git required (the market never offers updates for this form)
-dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.5.4.tar.gz
+dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.5.5.tar.gz
 ```
 
 > ⚠️ **About the market's "Update"**: for git installs it decides by **whether the commit changed**, not by version.
 > - ✅ **To keep updates working**: install a **branch** form (`#main`, or `github:owner/repo` with no ref).
-> - ❌ **Do not install a fixed tag** (`github:owner/repo#v1.5.4`): the update command re-adds the same tag, so it always fails with "the update command completed but the version did not change" — retrying never helps; you have to change the spec by hand.
+> - ❌ **Do not install a fixed tag** (`github:owner/repo#v1.5.5`): the update command re-adds the same tag, so it always fails with "the update command completed but the version did not change" — retrying never helps; you have to change the spec by hand.
 > - A **Release tarball URL** install is never offered an update by the market (no comparable commit in the lockfile); reinstall manually to move forward.
 
 After installing, **restart** `dsh web` and refresh the page:
