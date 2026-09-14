@@ -6,27 +6,30 @@
 
     irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 | iex
 
-  默认自动安装最新稳定版（GitHub 最新 Release tag）。
+  默认安装 **main 分支**（`github:wjingshan/dsh-cost-gauge#main`）。这样插件市场之后
+  才能正常提示并执行「更新」——市场判断 git 安装能不能更新，看的是 **commit 有没有变**，
+  只有分支写法会跟着走；固定 tag 会让它把同一个 tag 重装一遍，永远报「版本没有变化」。
 
-  想指定版本 / 分支 / 本地目录时，先下载脚本再带参数运行：
+  想指定版本 / 来源时，先下载脚本再带参数运行：
 
     irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 -OutFile install-dsh-cost-gauge.ps1
-    .\install-dsh-cost-gauge.ps1                            # 自动用最新稳定版
-    .\install-dsh-cost-gauge.ps1 -Ref main                  # 装 main 开发版
-    .\install-dsh-cost-gauge.ps1 -Ref v1.0.0                # 锁指定版本
-    .\install-dsh-cost-gauge.ps1 -Source .\dsh-cost-gauge   # 本地目录
+    .\install-dsh-cost-gauge.ps1                            # 跟 main（市场可自动更新）
+    .\install-dsh-cost-gauge.ps1 -Ref v1.5.4                # 锁 tag（市场不会自动更新）
+    .\install-dsh-cost-gauge.ps1 -Source .\dsh-cost-gauge              # 本地目录（链接方式）
+    .\install-dsh-cost-gauge.ps1 -Source https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.5.4.tar.gz
 
   说明：
-    - 无需本机安装 git（使用 GitHub tarball 直链，pnpm 直接拉取）。
+    - 默认的 `github:` 写法由 pnpm 用 `git ls-remote` 解析分支，**需要本机有 git**；
+      检测不到 git 时会自动回退到「最新 Release 的 tarball 直链」（那种装法市场不会提示更新）。
     - 需要 Node.js >= 20 与 DeepSeek Harness（带 dsh 命令；没有则自动用 npx）。
 #>
 [CmdletBinding()]
 param(
   [string]$Profile = 'web',
-  [string]$Ref = '',            # 留空 = 自动用 GitHub 最新 Release tag；可填 tag（v1.0.0）或分支（main）
+  [string]$Ref = '',            # 留空 = main（市场可自动更新）；可填分支（main）或 tag（v1.5.4，市场不会自动更新）
   [string]$Owner = 'wjingshan',
   [string]$Repo = 'dsh-cost-gauge',
-  [string]$Source = ''   # 可选：本地目录或任意安装源；留空则用 GitHub tarball
+  [string]$Source = ''   # 可选：本地目录或任意安装源；留空则按 -Ref 用 github: 写法
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,29 +58,40 @@ function Invoke-Dsh([string[]]$Args) {
   }
 }
 
-# 2) 解析安装来源（默认自动取最新 Release tag；也可 -Ref / -Source 指定）
+# 2) 解析安装来源
+#    默认跟 main：只有「分支」写法（github:owner/repo#main）插件市场才能正常更新；
+#    固定 tag 的 git 安装会让市场把同一个 tag 重装一遍，永远报「版本没有变化」。
 Write-Step "解析安装来源（$Repo → profile '$Profile'）…"
 if ($Source) {
   Write-Ok "使用指定来源：$Source"
 } else {
-  if (-not $Ref) {
-    Write-Host '    未指定版本，自动获取最新 Release…'
-    try {
-      $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Owner/$Repo/releases/latest" -Headers @{ 'User-Agent' = 'dsh-cost-gauge-installer' } -TimeoutSec 15
-      if ($latest -and $latest.tag_name) { $Ref = [string]$latest.tag_name }
-    } catch {
-      Write-Warn '获取最新 Release 失败'
+  if (-not $Ref) { $Ref = 'main' }
+  $hasGit = [bool](Get-Command git -CommandType Application -ErrorAction SilentlyContinue)
+  if ($hasGit) {
+    $Source = "github:$Owner/$Repo#$Ref"
+    Write-Ok "安装来源：$Source"
+    if ($Ref -match '^v?\d') {
+      Write-Warn "锁定 tag（$Ref）：插件市场无法自动更新这种安装——更新时它会把同一个 tag 重装一遍。想能自动更新请用 -Ref main。"
     }
-    if (-not $Ref) {
-      Write-Warn '回退到默认 v1.0.0'
-      $Ref = 'v1.0.0'
+  } else {
+    Write-Warn '未找到 git：github: 写法需要 git 解析分支，改用最新 Release 的 tarball 直链。'
+    if ($Ref -notmatch '^v?\d') {
+      $Ref = ''
+      try {
+        $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/$Owner/$Repo/releases/latest" -Headers @{ 'User-Agent' = 'dsh-cost-gauge-installer' } -TimeoutSec 15
+        if ($latest -and $latest.tag_name) { $Ref = [string]$latest.tag_name }
+      } catch {
+        Write-Warn '获取最新 Release 失败'
+      }
+      if (-not $Ref) {
+        Write-Warn '回退到默认 v1.5.4'
+        $Ref = 'v1.5.4'
+      }
     }
-    Write-Ok "最新 Release：$Ref"
+    $Source = "https://github.com/$Owner/$Repo/archive/refs/tags/$Ref.tar.gz"
+    Write-Ok "安装来源：$Source"
+    Write-Warn 'tarball 装法：插件市场不会提示更新；需要更新时重新运行本脚本，或装 git 后用 -Ref main 重装。'
   }
-  # 以数字/v+数字开头的 ref 视为 tag（refs/tags/），其余视为分支（refs/heads/）
-  $refPath = if ($Ref -match '^v?\d') { "refs/tags/$Ref" } else { "refs/heads/$Ref" }
-  $Source = "https://github.com/$Owner/$Repo/archive/$refPath.tar.gz"
-  Write-Ok "安装来源：$Source"
 }
 
 Write-Step "安装 $Repo 到 profile '$Profile'（ref=$Ref）…"
