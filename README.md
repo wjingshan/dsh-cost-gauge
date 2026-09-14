@@ -125,21 +125,24 @@ irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 
 powershell -ExecutionPolicy Bypass -File .\install.ps1 -Source .\dsh-cost-gauge
 ```
 
-### 手动安装（示例锁 v1.5.0，可换成任意 Release tag）
+### 手动安装
 
 ```sh
-# 从 git 安装（需要本机有 git，锁稳定版 tag）
-dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.5.0
-
-# 无 git 时用 tarball 直链（锁稳定版）
-dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.5.0.tar.gz
-
-# 想装最新开发版（main 分支）
+# 推荐：跟 main 分支 —— 插件市场能正常提示并执行「更新」
 dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
 
 # 从本地目录安装（链接方式，改 lib/*.js 后刷新页面即生效）
 dsh plugin --profile web add link:/path/to/dsh-cost-gauge
+
+# 锁版本（不推荐，见下方说明：市场不会自动更新）
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.5.4
+dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.5.4.tar.gz
 ```
+
+> ⚠️ **关于插件市场的「更新」**：市场判断 git 安装能不能更新，看的是 **commit 有没有变**，不是版本号。
+> - ✅ **想让市场能更新**：装**分支**写法（`#main`，或省略 ref 的 `github:owner/repo`）。
+> - ❌ **别装成固定 tag**（`github:owner/repo#v1.5.4`）：市场的更新命令会把同一个 tag 再装一遍，于是必然报「更新命令执行完成，但版本没有变化，原因未能确认」——点重试也不会成功，只能手动改 spec。
+> - 用 **Release tarball 直链**安装的市场**不会提示更新**（锁文件里没有可比较的 commit），需要更新时手动重装。
 
 装完**重启** `dsh web`，刷新页面即可看到左上角浮动窗。
 
