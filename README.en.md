@@ -12,6 +12,29 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | --- | --- |
 | <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
 
+## What's new in v1.6.0
+
+| Before / after (left: off · right: on — only the part over the chat text changes) |
+| --- |
+| <img src="docs/screenshot-glass.png" width="470" alt="Before/after: the widget straddles the chat column and only the part inside it turns into grey glass"> |
+
+- **A new glass treatment**: the part of the widget reaching into the conversation **content column** turns into **grey glass**:
+  - **title bar / bottom cost & balance rows**: slightly transparent (adjustable);
+  - **the middle background**: fully transparent — the blurred conversation shows through;
+  - **the dial and text in the middle**: keep only their **lightness** (hue and saturation dropped = greyscale), and **each colour's opacity equals its lightness** (lightness 80 → opacity 80%), so different colours end up differently transparent.
+- **Only the overlapping rectangle is affected**: whatever has not entered the chat column stays exactly as it was (even the dial keeps its colours). Implemented by clipping inside the SVG filter — the transformed result inside the hole and the original outside, feathered by the **Edge fade** setting.
+- **Six settings** (all live and remembered):
+
+  | Setting | Range | Default | Meaning |
+  | --- | --- | --- | --- |
+  | Frost | 0–24px | 9px | blur radius |
+  | Transparency | 0–100% | 47% | density of the milky veil in the middle |
+  | Edge fade | 0–40px | 14px | transition width between the normal and the glass area (0 = hard edge) |
+  | Bar fade | 0–60% | 15% | transparency of the title bar and the bottom rows (**0% = fully opaque**) |
+  | Content opacity | 0–100% | 100% | multiplier on top of lightness: 100% = strictly by lightness, 0% = invisible (linear, every step does something) |
+  | Lightness | Rec.709 / HSL / HSV | Rec.709 | which lightness defines the greyscale and the opacity |
+- **Fixed**: changing *Content opacity* or switching *Lightness* rebuilt the filter and reset the hole rectangle, so the transform vanished until the next tick (it felt like the slider did nothing). It now applies immediately — and the range was narrowed from 0–200% to **0–100%**.
+
 ## What's new in v1.5.3
 
 - **Fixed: session spend could stop updating (out-of-range ledger cursor)**: after a session log is compacted or rewritten its seq space shrinks, while the persisted `cursor` stays in the old space — so `snapshotEvents(cursor, log end)` returns an empty array forever and new events are never folded in (session spend freezes, or stays at ¥0.00 after a reset). The session's ledger entry is now rebuilt from the current log whenever `cursor > session.seq`.
@@ -84,7 +107,7 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 - 🔲 **Floating window** — sits near the upper left by default, drag it by the title bar; the position is remembered.
 - 📱 **Viewport-aware** — when the viewport gets narrow (≤ 779px) the gauge collapses into a **36px vertical mini** (lamp + cost + balance + model badge); click to expand, and it restores automatically at 860px or more. If DSH auto-collapses the sidebar the strip docks to its right, and with the sidebar expanded it docks under the “Sessions / Workspaces” heading.
 - 🪟 **Auto step-aside** — on window resizes, a widget covering the conversation text moves into the blank gap between the text column and the sidebar (centred, lower part); priority is text column > composer > sidebars.
-- 🧊 **Frosted glass over the chat** (setting, off by default) — the overlapping strip of the widget turns translucent so the text underneath stays readable.
+- 🧊 **Glass over the chat** (six settings) — the part reaching into the chat text turns into grey glass: translucent bars, a fully transparent middle background and a dial whose opacity equals its lightness; **the rest of the widget is untouched**.
 - 💰 **Session cost** — token usage priced with the official peak/off-peak rates (cache miss / cache hit / output priced separately).
   - **Per-event pricing**: usage produced during off-peak hours is charged at the off-peak rate and usage produced during peak hours at the peak rate, then summed. Entering the peak window does **not** re-price earlier off-peak usage.
 - 🧭 **Rate hand** — the dial shows the current rate band and the countdown to the next switch.
@@ -127,15 +150,15 @@ dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
 dsh plugin --profile web add link:/path/to/dsh-cost-gauge
 
 # pinned version (not recommended — see the note below: the market will not update it)
-dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.5.5
+dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#v1.6.0
 
 # tarball, no git required (the market never offers updates for this form)
-dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.5.5.tar.gz
+dsh plugin --profile web add https://github.com/wjingshan/dsh-cost-gauge/archive/refs/tags/v1.6.0.tar.gz
 ```
 
 > ⚠️ **About the market's "Update"**: for git installs it decides by **whether the commit changed**, not by version.
 > - ✅ **To keep updates working**: install a **branch** form (`#main`, or `github:owner/repo` with no ref).
-> - ❌ **Do not install a fixed tag** (`github:owner/repo#v1.5.5`): the update command re-adds the same tag, so it always fails with "the update command completed but the version did not change" — retrying never helps; you have to change the spec by hand.
+> - ❌ **Do not install a fixed tag** (`github:owner/repo#v1.6.0`): the update command re-adds the same tag, so it always fails with "the update command completed but the version did not change" — retrying never helps; you have to change the spec by hand.
 > - A **Release tarball URL** install is never offered an update by the market (no comparable commit in the lockfile); reinstall manually to move forward.
 
 After installing, **restart** `dsh web` and refresh the page:
