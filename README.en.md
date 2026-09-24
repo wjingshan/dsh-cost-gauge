@@ -12,6 +12,16 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | --- | --- |
 | <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
 
+## What's new in v1.6.1
+
+Compatibility with **dsh 0.1.7**. That release **removed the `data-dsh-frame` attribute** from the three-column app frame — the frame now only carries *conditional* attributes (`data-sidebar-collapsed` / `data-rightbar-collapsed` / `data-panel-conversation`) that are not rendered at all when false, so the main frame can no longer be selected directly.
+
+- **Fixed: wrong conversation-area geometry** (verified by measurement). `getChatAreaRect()` used to take the frame via `[data-dsh-frame]` and then pick the middle conversation column from its direct children. Under 0.1.7 that attribute is gone, so the function **silently degraded to a global `scrollBody` search**: it measured **998×732**, whereas the real middle column is **1000×808** (76px too short), and its internal `chatPanelEl` stayed `null` — so later lookups for `scrollBody` / the input card were **no longer scoped to the middle column**. This also skewed the glass effect's "overlaps the conversation area" test and the content-band alignment. It now resolves the frame through the new `getFrameEl()` and correctly selects `centerCol`.
+- **Fixed: sidebar collapse detection.** The collapse signal is now read from `data-sidebar-collapsed` on the frame (`getFrameEl()` tries the legacy attribute first for 0.1.6 and older, then derives the frame by walking **up from the sidebar / center / right column**). The width fallback changed from `w > 0 && w <= 96` to "**frame is laid out** + column width ≤ 96px": in Windows titlebar mode a collapsed column is **0** wide (the whole column is 0×0, which the width fallback cannot see) and the old check missed it; the layout check distinguishes "really collapsed" from "first frame, not laid out yet".
+- **Corrected a manifest field**: `dsh.client.inject` declared `@deepseek-ai/dsh-client-runtime`, which no longer exists in the new dependency tree; it now names `@deepseek-ai/dsh-api-session-controller`, the package that actually provides the client-side `sessions` service. The field is only an **informational** dependency (`dsh-client-modules` silently ignores unknown packages), so the stale value never errored — it was just outdated.
+
+> The host-side accounting (session event reading, V4 session format, model pricing) was checked and **needs no change**: 0.1.7's `dsh-token-meter` extracts usage the same way this plugin does, and the model catalog is still `deepseek-flash` (V4.1-Flash) and `deepseek-v4-pro`.
+
 ## What's new in v1.6.0
 
 | Before / after (left: off · right: on — only the part over the chat text changes) |
