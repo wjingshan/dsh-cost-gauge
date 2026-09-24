@@ -2,7 +2,7 @@
 
 [中文](README.md) | English
 
-A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the **upper left** of the Web UI that shows the current session cost and account balance in real time. The **semicircular dial** has a hand that follows Beijing time and arcs colored by the day's rate bands (green = standard, amber = peak, all green on weekends). A red lamp at the top blinks when the balance drops below the threshold. Supports **drag / resize** and **minimize** (status lamp + countdown ring + model badge).
+A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the **upper left** of the Web UI that shows the current session cost and account balance in real time. The **semicircular dial** has a hand that follows Beijing time and arcs colored by the day's rate bands (green = standard, amber = peak, all green on weekends and public holidays). A red lamp at the top blinks when the balance drops below the threshold. Supports **drag / resize** and **minimize** (status lamp + countdown ring + model badge).
 
 > 🔀 **Related project**: the “minimal-clock / multi-skin” line is maintained separately as **[dsh-cost-gauge-plus](https://github.com/wjingshan/dsh-cost-gauge-plus)**. This repository keeps evolving the **v1.0 classic square gauge**; the two are independent.
 
@@ -11,6 +11,18 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | Expanded | Minimized |
 | --- | --- |
 | <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
+
+## What's new in v1.6.2
+
+**Holiday pricing**: Chinese statutory holidays (including make-up workdays) are **billed at the off-peak rate**. Until now the dial judged by **weekday only**, so a holiday landing on a Monday-to-Friday was wrongly shown as **standard/peak**.
+
+- **New `lib/holidays.js`** carrying the **2026** State Council holiday schedule (New Year / Spring Festival / Qingming / Labour Day / Dragon Boat / Mid-Autumn / National Day), distinguishing **statutory holidays** from **weekend make-up workdays** (e.g. Sun 9-20 and Sat 10-10 are normal working days).
+- **All-green dial on holidays**: on a holiday (**even a weekday**) the whole arc is green, exactly like a weekend — no amber peak band. This matches the official "holidays are billed off-peak" rule.
+- **Rate-switch instants carry over**: the countdown no longer simply jumps to the next 9:00 / 12:00 / 14:00 / 18:00 — it **skips holidays and weekends**. For example 18:30 on the day before Mid-Autumn carries all the way to **Mon 9-28 09:00**, and 19:00 before National Day carries to **10-08 (Thu) 09:00**. The off-peak stretch length driving the countdown ring follows the same rule, so the ring's proportion stays correct.
+- **The status text now explains itself**: "standard" on a weekday daytime used to contradict the amber band on the dial. It now reads `Standard (Mid-Autumn Festival)` / `Standard (make-up workday)` / `Standard (off-peak)`.
+- **Data-coverage hint**: the settings panel's version line shows `Holiday data: 2026 (State Council notices)`. For a year that is not covered the rate **falls back to weekday-only** and the line turns amber: `⚠ No holiday data for 2027; rate falls back to weekday only`.
+
+> When the 2027 schedule is published, just add one more year table to `lib/holidays.js`; `coveredYears()` picks the new year up in that hint automatically.
 
 ## What's new in v1.6.1
 
