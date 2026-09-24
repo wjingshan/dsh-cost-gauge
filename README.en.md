@@ -12,6 +12,21 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | --- | --- |
 | <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
 
+## What's new in v1.6.3
+
+**Fixed: the session cost and the model badge stopped rendering** (since dsh 0.1.7; the header showed nothing but `—`).
+
+dsh 0.1.7 moved "**which session is currently selected**" **out of** the client-side `sessions` service: the list snapshot of `dsh-api-session-controller` now holds only `ids / byId / phase / projectionsBySession` — **there is no `current` field** (the file's own comment says *"Host catalog and local reference allocator; **view selection remains outside the Controller**"*). The selection is now kept **privately** by `dsh-client-ui-workspace` and is **not** provided as a service (0.1.7's client exposes just eight services: `sessions` / `layout` / `resources` / `modules` / `documentPreviews` / `uiRenderer` / `sidebarRightTabs` / `sidebarRight`), so a plugin cannot inject it.
+
+The plugin used to read `ctx.sessions.list.getSnapshot().current`, which is now always `undefined` — so the request degraded to one **without `?session=`**, the host returned only the rate and balance, and the header could show nothing but `—`.
+
+- **Now resolved from several sources** (new `currentSessionId()`, tried in order of reliability, first hit wins):
+  1. `localStorage['dsh.sessions.current']` — the selection **dsh itself** persists (shaped `{ sessionId }`). `dsh-client-store`'s `attachPersistence` writes it back **synchronously** on every state change, so it is a live signal, not a stale cache.
+  2. `[data-sidebar-right-session]:not([hidden])` — the rightbar's current-session element, also written by dsh itself.
+  3. The old snapshot's `.current` — for **0.1.6 and earlier**.
+- **All three call sites unified**: polling, the working lamp, and the records panel/export each read `.current` separately; they now all go through `currentSessionId()`.
+- **The "working lamp" is fixed too**: `isSessionRunning()` depended on `.current` as well, so the header lamp glow and the minimised blinking for "session running" **had been broken all along** (it never lit).
+
 ## What's new in v1.6.2
 
 **Holiday pricing**: Chinese statutory holidays (including make-up workdays) are **billed at the off-peak rate**. Until now the dial judged by **weekday only**, so a holiday landing on a Monday-to-Friday was wrongly shown as **standard/peak**.

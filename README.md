@@ -14,6 +14,21 @@ DeepSeek Harness（`dsh`）的**花费指示器**：Web 界面**左侧靠上**�
 
 > 左：展开态（工作日高峰：表盘绿/黄双色、黄色弧段=高峰时段）；右：最小化态（费率灯 + 所剩时间饼图 + 会话费/余额 + 模型缩写徽标）。
 
+## 本次更新（v1.6.3）
+
+**修复：会话花费与模型徽标显示不出来**（dsh 0.1.7 起，界面顶部只剩 `—`）。
+
+DSH 0.1.7 把「**当前选中哪个会话**」从客户端的 `sessions` 服务里**移了出去**：`dsh-api-session-controller` 的列表快照现在只有 `ids / byId / phase / projectionsBySession` —— **没有 `current` 字段**（该文件自己的注释就写着 *"Host catalog and local reference allocator; **view selection remains outside the Controller**"*）。选中状态改由 `dsh-client-ui-workspace` **私有**维护，并且**没有** provide 成服务（0.1.7 客户端总共只提供 8 个服务：`sessions` / `layout` / `resources` / `modules` / `documentPreviews` / `uiRenderer` / `sidebarRightTabs` / `sidebarRight`），插件无从注入。
+
+插件原先读 `ctx.sessions.list.getSnapshot().current` —— 在新版恒为 `undefined`，于是请求退化成**不带 `?session=`**，宿主拿不到会话就只返回到费率与余额，界面顶部只能显示 `—`。
+
+- **改为多源取值**（新增 `currentSessionId()`，按可靠性依次尝试，任一成功即用）：
+  1. `localStorage['dsh.sessions.current']` —— **DSH 自己**持久化的选择（形如 `{ sessionId }`）。`dsh-client-store` 的 `attachPersistence` 在每次状态变化时**同步**写回，所以它是实时信号，不是陈旧缓存。
+  2. `[data-sidebar-right-session]:not([hidden])` —— 右栏当前会话元素，同样由 DSH 自己写入。
+  3. 旧版快照的 `.current` —— 兼容 **0.1.6 及更早**。
+- **三处调用点统一**：轮询取数、工作灯、记录面板/导出原本各自读 `.current`，现在都走 `currentSessionId()`。
+- **连带修好「工作灯」**：`isSessionRunning()` 同样依赖 `.current`，所以「会话执行中」的标题灯发光与最小化态闪烁**此前一直是坏的**（永远不亮）。
+
 ## 本次更新（v1.6.2）
 
 **节假日费率**：中国法定节假日（含调休补班）**按空闲档计费**。此前表盘只按「星期几」判断，节假日一旦落在周一至周五，就会被错误地显示成**标准/高峰**。
