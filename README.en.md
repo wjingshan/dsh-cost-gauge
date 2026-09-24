@@ -8,11 +8,23 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 
 ## Screenshots
 
-| Expanded | Minimized |
-| --- | --- |
-| <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> |
+| Expanded | Minimized | Public holiday |
+| --- | --- | --- |
+| <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> | <img src="docs/holiday.png" width="216" alt="Public holiday: all-green arc and Standard (Mid-Autumn Festival)"> |
 
-## What's new in v1.6.3
+> Left: expanded (weekday peak — green/amber arcs, amber = peak band); middle: minimized (rate lamp + countdown ring + cost/balance + model badge); right: a **public holiday** (Mid-Autumn, 9-25) — the whole arc is green and the status reads "Standard (Mid-Autumn Festival)".
+
+## What's new in v1.6.1 – v1.6.3
+
+> One round of **dsh 0.1.7** compatibility work, covering three things: **compatibility**, **holiday display**, and the **cost display fix**.
+
+| Version | Theme | In one line |
+| --- | --- | --- |
+| **v1.6.1** | 🧩 Compatibility | 0.1.7 dropped `data-dsh-frame` from the app frame — conversation-area geometry and sidebar-collapse detection broke; the frame is now derived by walking up from the columns |
+| **v1.6.2** | 🗓 Holiday display | Chinese statutory holidays (and weekend make-up workdays) are billed off-peak: all-green dial, switch instants that skip holidays, and status text that says why |
+| **v1.6.3** | 💰 Cost display fix | 0.1.7 moved “which session is selected” out of the client `sessions` service, so the cost and the model badge stuck at `—`; now resolved from several sources |
+
+### v1.6.3 · Cost display fix
 
 **Fixed: the session cost and the model badge stopped rendering** (since dsh 0.1.7; the header showed nothing but `—`).
 
@@ -27,7 +39,7 @@ The plugin used to read `ctx.sessions.list.getSnapshot().current`, which is now 
 - **All three call sites unified**: polling, the working lamp, and the records panel/export each read `.current` separately; they now all go through `currentSessionId()`.
 - **The "working lamp" is fixed too**: `isSessionRunning()` depended on `.current` as well, so the header lamp glow and the minimised blinking for "session running" **had been broken all along** (it never lit).
 
-## What's new in v1.6.2
+### v1.6.2 · Holiday display
 
 **Holiday pricing**: Chinese statutory holidays (including make-up workdays) are **billed at the off-peak rate**. Until now the dial judged by **weekday only**, so a holiday landing on a Monday-to-Friday was wrongly shown as **standard/peak**.
 
@@ -39,7 +51,7 @@ The plugin used to read `ctx.sessions.list.getSnapshot().current`, which is now 
 
 > When the 2027 schedule is published, just add one more year table to `lib/holidays.js`; `coveredYears()` picks the new year up in that hint automatically.
 
-## What's new in v1.6.1
+### v1.6.1 · Compatibility
 
 Compatibility with **dsh 0.1.7**. That release **removed the `data-dsh-frame` attribute** from the three-column app frame — the frame now only carries *conditional* attributes (`data-sidebar-collapsed` / `data-rightbar-collapsed` / `data-panel-conversation`) that are not rendered at all when false, so the main frame can no longer be selected directly.
 
@@ -251,6 +263,7 @@ dsh-cost-gauge/
 ├── lib/
 │   ├── index.js          # host: balance, accounting, rate, /api/cost-gauge/* routes
 │   ├── ledger.js         # host: log replay accounting, ledger persistence, xlsx writer
+│   ├── holidays.js       # Chinese statutory holidays (2026) + weekend make-up workdays
 │   └── client.js         # browser: floating gauge + records panel (bilingual)
 └── README.md / README.en.md
 ```
