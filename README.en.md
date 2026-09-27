@@ -191,6 +191,8 @@ irm https://raw.githubusercontent.com/wjingshan/dsh-cost-gauge/main/install.ps1 
 
 ### Manual install
 
+> The command listed for this plugin in the marketplace (the GitHub `dsh-plugin` index / [awesome-dsh-plugin.com](https://awesome-dsh-plugin.com)) is exactly the first one below, `github:wjingshan/dsh-cost-gauge`. That is a **git install**: it takes the **latest commit on the `main` branch** and has **nothing to do with GitHub Releases** — so the "stable vs development" distinction only applies to the one-liner above (`install.ps1` follows `/releases/latest`; the marketplace follows the branch tip).
+
 ```sh
 # recommended: follow the main branch — the plugin market can offer and apply updates
 dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main

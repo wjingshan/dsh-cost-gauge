@@ -197,6 +197,8 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Source .\dsh-cost-gauge
 
 ### 手动安装
 
+> 插件市场（GitHub `dsh-plugin` 索引 / [awesome-dsh-plugin.com](https://awesome-dsh-plugin.com)）里给的那条安装命令，就是下面第一条 `github:wjingshan/dsh-cost-gauge`。它属于 **git 安装**，取的是 **`main` 分支的最新提交**，**与 GitHub Release 无关** —— 所以「正式版 / 开发版」之分只对上面的一键安装有意义：`install.ps1` 认的是 `/releases/latest`，市场认的是分支最新提交。
+
 ```sh
 # 推荐：跟 main 分支 —— 插件市场能正常提示并执行「更新」
 dsh plugin --profile web add github:wjingshan/dsh-cost-gauge#main
