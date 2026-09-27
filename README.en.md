@@ -2,7 +2,7 @@
 
 [中文](README.md) | English
 
-A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the **upper left** of the Web UI that shows the current session cost and account balance in real time. The **semicircular dial** has a hand that follows Beijing time and arcs colored by the day's rate bands (green = standard, amber = peak, all green on weekends and public holidays). A red lamp at the top blinks when the balance drops below the threshold. Supports **drag / resize** and **minimize** (status lamp + countdown ring + model badge).
+A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the **upper left** of the Web UI that shows the current session cost and account balance in real time. The **semicircular dial** has a hand that follows Beijing time and arcs colored by the day's rate bands (green = standard, amber = peak, all green on weekends and public holidays). A red lamp at the top blinks when the balance drops below the threshold. Supports **drag / resize**, **minimize** (status lamp + countdown ring + model badge) and **edge snapping** (drag the widget to the left or right edge of the app window and it docks as a thin vertical strip).
 
 > 🔀 **Related project**: the “minimal-clock / multi-skin” line is maintained separately as **[dsh-cost-gauge-plus](https://github.com/wjingshan/dsh-cost-gauge-plus)**. This repository keeps evolving the **v1.0 classic square gauge**; the two are independent.
 
@@ -14,15 +14,33 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 
 > Left: expanded (weekday peak — green/amber arcs, amber = peak band); middle: minimized (rate lamp + countdown ring + cost/balance + model badge); right: a **public holiday** (Mid-Autumn, 9-25) — the whole arc is green and the status reads "Standard (Mid-Autumn Festival)".
 
-## What's new in v1.6.1 – v1.6.3
+## What's new in v1.6.1 – v1.6.4
 
-> One round of **dsh 0.1.7** compatibility work, covering three things: **compatibility**, **holiday display**, and the **cost display fix**.
+> Two batches: **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
 
 | Version | Theme | In one line |
 | --- | --- | --- |
-| **v1.6.1** | 🧩 Compatibility | 0.1.7 dropped `data-dsh-frame` from the app frame — conversation-area geometry and sidebar-collapse detection broke; the frame is now derived by walking up from the columns |
-| **v1.6.2** | 🗓 Holiday display | Chinese statutory holidays (and weekend make-up workdays) are billed off-peak: all-green dial, switch instants that skip holidays, and status text that says why |
+| **v1.6.4** | 🧲 Edge snapping | Drag the widget to the left or right edge and it snaps into a **docked vertical strip**; click it or drag it away to restore |
 | **v1.6.3** | 💰 Cost display fix | 0.1.7 moved “which session is selected” out of the client `sessions` service, so the cost and the model badge stuck at `—`; now resolved from several sources |
+| **v1.6.2** | 🗓 Holiday display | Chinese statutory holidays (and weekend make-up workdays) are billed off-peak: all-green dial, switch instants that skip holidays, and status text that says why |
+| **v1.6.1** | 🧩 Compatibility | 0.1.7 dropped `data-dsh-frame` from the app frame — conversation-area geometry and sidebar-collapse detection broke; the frame is now derived by walking up from the columns |
+
+### v1.6.4 · Edge snapping (docked strip)
+
+**New: drag the widget to the edge of the app window and it snaps to that edge; on the left or right edge it also turns into a vertical strip.**
+
+<img src="docs/docked.png" width="36" alt="Docked strip: the thin vertical form after snapping to the right edge">
+
+- **Magnetic preview while dragging**: once the pointer is within **24px** of an edge the widget is pulled to it and only settles there when you let go — no guessing whether it will snap.
+- **Left / right edge → vertical strip**: on release it becomes a **36px-wide** strip docked to that edge, stacked top to bottom: status lamp, session cost, balance and model badge. Its **vertical position** stays wherever you dropped it.
+- **Top / bottom edge → edge only, no reshape**: top and bottom just snap (a horizontal strip would make no sense).
+- **Corners count as left/right**: dropping in a corner is handled as the left or right edge — only those two reshape into a strip.
+- **Getting out is easy**: click the strip to expand it in place, back at **the position it had before you dragged it**; or drag the strip toward the middle of the window and it undocks and expands right there.
+- **Persisted**: which edge it is docked to, how far down, and where it used to be all live in `localStorage` (`dsh-cost-gauge:dock` / `dsh-cost-gauge:pos`), so a page refresh restores it.
+- **Can be turned off**: the settings panel has a new **Edge snapping** switch (on by default); the snap distance can be overridden with `dsh-cost-gauge:snapDist`.
+
+> This is not the same as the **vertical mini** mode from v1.4.0: that one is triggered by **window width** (a narrow window collapses the widget), while this one is triggered by **position** — even a very wide window snaps when you drag the widget to the edge.
+> This feature is **front-end only**; the host half (`lib/index.js` / `lib/ledger.js`) was not touched.
 
 ### v1.6.3 · Cost display fix
 
@@ -266,7 +284,7 @@ dsh-cost-gauge/
 │   ├── index.js          # host: balance, accounting, rate, /api/cost-gauge/* routes
 │   ├── ledger.js         # host: log replay accounting, ledger persistence, xlsx writer
 │   ├── holidays.js       # Chinese statutory holidays (2026) + weekend make-up workdays
-│   └── client.js         # browser: floating gauge + records panel (bilingual)
+│   └── client.js         # browser: floating gauge + edge snapping + records panel (bilingual)
 └── README.md / README.en.md
 ```
 
