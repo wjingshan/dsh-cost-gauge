@@ -250,6 +250,24 @@ dsh web
 - Release 说明默认从「上一个 tag 以来的提交历史」自动生成，也可 `-Notes "…"` 自定义。
 - 创建 Release 需要 PAT：设置环境变量 `GH_TOKEN`（fine-grained，仓库权限 Contents 读写），或运行时按提示输入。
 - 发版后无需改任何脚本——`install.ps1` 会自动安装最新 Release tag。
+- `release.ps1` 内部会 `git add -A` 并提交，发版前先 `git status` 看一眼，别让临时截图 / 调试脚本跟着提交进去。
+
+> ⚠️ **推了 tag 不等于发布了版本。** `install.ps1` 取的是 GitHub 的 **Release**（`/releases/latest`），不是最新的 tag；插件市场看的也是 Release。所以只 `git push --tags` 而没建 Release，一键安装会**静默停在旧版**上——v1.6.1 ~ v1.6.3 就踩过这个坑：三个 tag 都在远端，Release 却还停在 v1.6.0，直到补建才对齐。
+>
+> 发完版确认三处对齐（tag / Release / `main`）：
+>
+> ```powershell
+> gh release list --limit 3                                             # 第一行应是刚发的 tag，且标着 Latest
+> gh api repos/wjingshan/dsh-cost-gauge/releases/latest --jq .tag_name  # 应与刚发的 tag 一致
+> ```
+>
+> 漏建了可以补（只是给已存在的 tag 挂上 Release，不动任何提交）：
+>
+> ```powershell
+> gh release create v1.6.3 --repo wjingshan/dsh-cost-gauge --title v1.6.3 --notes-file notes.md
+> ```
+>
+> `gh` 需要已登录（`gh auth login`）；也可以沿用脚本里的 PAT 方式，直接 `POST /repos/wjingshan/dsh-cost-gauge/releases` 并带上 `tag_name`。
 
 ## 数据与安全
 

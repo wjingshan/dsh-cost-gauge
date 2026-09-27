@@ -276,6 +276,25 @@ dsh-cost-gauge/
 
 Creating the GitHub Release needs a PAT (`GH_TOKEN`, fine-grained with Contents read/write) or an interactive prompt. `install.ps1` always picks the latest Release tag, so no script changes are needed per release.
 
+`release.ps1` runs `git add -A` before committing, so check `git status` first — stray screenshots or debug scripts would ride along with the version bump.
+
+> ⚠️ **Pushing a tag is not publishing a version.** `install.ps1` resolves the GitHub **Release** (`/releases/latest`), not the newest tag, and the marketplace looks at the Release too. Push tags without creating a Release and one-liner installs silently stay on the old version — exactly what happened with v1.6.1–v1.6.3: all three tags were on the remote, yet the Release feed was still stuck at v1.6.0 until they were backfilled.
+>
+> After a release, confirm the three anchors line up (tag / Release / `main`):
+>
+> ```powershell
+> gh release list --limit 3                                              # first row should be your tag, marked Latest
+> gh api repos/wjingshan/dsh-cost-gauge/releases/latest --jq .tag_name   # should equal that tag
+> ```
+>
+> Missed one? Backfill it — this only attaches a Release to an existing tag and touches no commits:
+>
+> ```powershell
+> gh release create v1.6.3 --repo wjingshan/dsh-cost-gauge --title v1.6.3 --notes-file notes.md
+> ```
+>
+> `gh` must be logged in (`gh auth login`); the PAT route works as well — `POST /repos/wjingshan/dsh-cost-gauge/releases` with `tag_name`.
+
 ## License
 
 MIT
