@@ -14,17 +14,46 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 
 > Left: expanded (weekday peak — green/amber arcs, amber = peak band); middle: minimized (rate lamp + countdown ring + cost/balance + model badge); right: a **public holiday** (Mid-Autumn, 9-25) — the whole arc is green and the status reads "Standard (Mid-Autumn Festival)".
 
-## What's new in v1.6.1 – v1.6.5
+## What's new in v1.6.1 – v1.6.6
 
-> Three batches: **v1.6.5** slims down the **minimized capsule**; **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
+> Four batches: **v1.6.6** brings back the **bar chart in the cost records panel** (it had been buried by the glass backdrop layer since v1.6.0); **v1.6.5** slims down the **minimized capsule**; **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
 
 | Version | Theme | In one line |
 | --- | --- | --- |
+| **v1.6.6** | 📊 Bar chart regression | The glass backdrop layer and the chart's bars shared the class name `.dsg-bar`: the bars inherited `position:absolute; inset:0`, so 30 of them covered the whole chart area and the last, empty one hid all the others |
 | **v1.6.5** | 📏 Slimmer minimized capsule | Minimized size halved and the width now fits its content; the badge's slot class was being wiped by `setModelBadge`, which is why the right side had a blank gap |
 | **v1.6.4** | 🧲 Edge snapping | Drag the widget to the left or right edge and it snaps into a **docked vertical strip**; click it or drag it away to restore |
 | **v1.6.3** | 💰 Cost display fix | 0.1.7 moved “which session is selected” out of the client `sessions` service, so the cost and the model badge stuck at `—`; now resolved from several sources |
 | **v1.6.2** | 🗓 Holiday display | Chinese statutory holidays (and weekend make-up workdays) are billed off-peak: all-green dial, switch instants that skip holidays, and status text that says why |
 | **v1.6.1** | 🧩 Compatibility | 0.1.7 dropped `data-dsh-frame` from the app frame — conversation-area geometry and sidebar-collapse detection broke; the frame is now derived by walking up from the columns |
+
+### v1.6.6 · The bar chart was buried by the backdrop layer (class-name collision)
+
+**Fix: ever since v1.6.0 the cost records panel's bar chart showed nothing but “最大 ¥…” and the legend — all the bars were gone.**
+
+<img src="docs/chart-bars-before.png" width="420" alt="Before: the chart area is empty apart from the max label and the legend"> <img src="docs/chart-bars-after.png" width="420" alt="After: 30 stacked bars with day labels">
+
+The root cause is **two different things sharing one class name**: the chart's bars (added in v1.3.0) are `.dsg-bar`, and the **backdrop layer** that the glass redesign (v1.6.0) puts behind the title bar and the bottom row is *also* `.dsg-bar`:
+
+```css
+/* v1.6.0 backdrop layer (only shown while frosting is on) */
+.dsg-bar{position:absolute;inset:0;z-index:1;display:none;pointer-events:none;background:rgba(20,22,28,1); …}
+/* v1.3.0 chart bar: later in the sheet, but it only declares a few properties */
+.dsg-bar{flex:1;min-width:0;height:100%;display:flex;flex-direction:column;justify-content:flex-end}
+```
+
+The later rule wins only for `display` / `height` / `flex`, so the bars **inherited** `position:absolute; inset:0; z-index:1; pointer-events:none` from the backdrop — **each of the 30 bars ended up covering the entire chart area**, later ones painting over earlier ones, and the last day (no usage, no segments) had an opaque background that wiped out everything in front of it. `pointer-events:none` came along too, which is why the bars could not even be hit with the mouse (`document.elementFromPoint` returned the container instead of a bar).
+
+- **Scoped the backdrop to direct children**: `.dsg-root>.dsg-bar{…}` and `.dsg-root.dsg-frosting>.dsg-bar{display:block}`. The backdrop already *is* a direct child of `.dsg-root` (in the markup `<div class="dsg-bar">` sits next to `.dsg-bg` and `.dsg-frost`), while the chart bars are descendants — the two can no longer touch each other.
+- Added a **comment** above that rule about the collision, so nobody writes another bare `.dsg-bar` rule.
+
+| Case | Before | After |
+| --- | --- | --- |
+| The panel's bar chart | an empty dark rectangle (just the max label + legend) | 30 stacked bars + day labels + legend |
+| Chart bar positioning | `position:absolute`, opaque background | `position:static`, transparent background |
+| Glass backdrop layer | `display:block` / `absolute` / `z-index:1` / `rgb(20,22,28)` | unchanged |
+
+> A pure CSS change — **two selectors** — verified both in the project's live preview page (`docs/preview-live.html?panel=1&range=month&view=band`, which loads the same `lib/client.js`) and in the real GUI.
 
 ### v1.6.5 · Slimmer minimized capsule
 
