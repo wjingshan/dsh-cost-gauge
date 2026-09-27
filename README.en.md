@@ -14,16 +14,41 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 
 > Left: expanded (weekday peak — green/amber arcs, amber = peak band); middle: minimized (rate lamp + countdown ring + cost/balance + model badge); right: a **public holiday** (Mid-Autumn, 9-25) — the whole arc is green and the status reads "Standard (Mid-Autumn Festival)".
 
-## What's new in v1.6.1 – v1.6.4
+## What's new in v1.6.1 – v1.6.5
 
-> Two batches: **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
+> Three batches: **v1.6.5** slims down the **minimized capsule**; **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
 
 | Version | Theme | In one line |
 | --- | --- | --- |
+| **v1.6.5** | 📏 Slimmer minimized capsule | Minimized size halved and the width now fits its content; the badge's slot class was being wiped by `setModelBadge`, which is why the right side had a blank gap |
 | **v1.6.4** | 🧲 Edge snapping | Drag the widget to the left or right edge and it snaps into a **docked vertical strip**; click it or drag it away to restore |
 | **v1.6.3** | 💰 Cost display fix | 0.1.7 moved “which session is selected” out of the client `sessions` service, so the cost and the model badge stuck at `—`; now resolved from several sources |
 | **v1.6.2** | 🗓 Holiday display | Chinese statutory holidays (and weekend make-up workdays) are billed off-peak: all-green dial, switch instants that skip holidays, and status text that says why |
 | **v1.6.1** | 🧩 Compatibility | 0.1.7 dropped `data-dsh-frame` from the app frame — conversation-area geometry and sidebar-collapse detection broke; the frame is now derived by walking up from the columns |
+
+### v1.6.5 · Slimmer minimized capsule
+
+**Fix + polish: the minimized state always had a blank gap on the right; the whole thing is now half the size.**
+
+The minimized widget used to be a **210×58** capsule, and as soon as the model name was short (say `flash`) it left sixty-odd pixels of empty space on the right. The root cause was not the size but the badge — `setModelBadge()` rewrote `className` wholesale every time:
+
+```js
+el.className = 'dsg-badge' + (cls ? ' ' + cls : '')
+```
+
+That wiped the slot class `dsg-mini-badge`, so `.dsg-mini-badge{margin-left:auto}` **never applied**; and since the width was hard-coded to `MINI_W = 210`, whatever was left over stayed as blank space. (The docked strip's badge only survived because one line re-added `classList.add('dsg-narrow-badge')`.)
+
+- **The badge slot is now a parameter**: `setModelBadge(el, modelRaw, slot)`, with the three call sites passing `undefined` / `'dsg-mini-badge'` / `'dsg-narrow-badge'`; that ad-hoc patch line is gone.
+- **The width now fits its content**: the minimized state sets `width:auto` **and** turns off `container-type`. `.dsg-root` carries `container-type:inline-size`, so it is an inline-size container whose intrinsic width ignores its contents — **`width:auto` alone collapses it to 22px** (measured).
+- **Half the size throughout**: status lamp 40 → 20px, main figure 14 → 12px, balance 11 → 10px, padding 8px/10px → 3px/7px.
+- **Badge font is now a fixed `9px`** (there is no container in the minimized state, so `cqw` would fall back to the viewport) and capped at `44px` wide, with long model names truncated by ellipsis.
+
+| Case | Before | After |
+| --- | --- | --- |
+| Long model name `v4-flash-vision-exp` | 210×58 | **135×34** |
+| Short model name `flash` | 210×58 (~62px of blank space) | **111×34** (no gap) |
+
+> Neither the expanded state nor the docked strip was affected (measured in the live GUI: expanded is still 216×265 and the strip is still 36×198). This is a **front-end only** change as well.
 
 ### v1.6.4 · Edge snapping (docked strip)
 
