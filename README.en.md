@@ -278,7 +278,7 @@ Creating the GitHub Release needs a PAT (`GH_TOKEN`, fine-grained with Contents 
 
 `release.ps1` runs `git add -A` before committing, so check `git status` first — stray screenshots or debug scripts would ride along with the version bump.
 
-> ⚠️ **Pushing a tag is not publishing a version.** `install.ps1` resolves the GitHub **Release** (`/releases/latest`), not the newest tag, and the marketplace looks at the Release too. Push tags without creating a Release and one-liner installs silently stay on the old version — exactly what happened with v1.6.1–v1.6.3: all three tags were on the remote, yet the Release feed was still stuck at v1.6.0 until they were backfilled.
+> ⚠️ **Pushing a tag is not publishing a version.** `install.ps1` resolves the GitHub **Release** (`/releases/latest`), not the newest tag. (The marketplace hands out `dsh plugin --profile web add github:wjingshan/dsh-cost-gauge` — a git install that follows the **default branch tip**, so Releases do not affect it.) Push tags without creating a Release and `install.ps1` one-liner installs are silently stuck on the old version — exactly what happened with v1.6.1–v1.6.3: all three tags were on the remote, yet the Release feed was still stuck at v1.6.0 until they were backfilled.
 >
 > After a release, confirm the three anchors line up (tag / Release / `main`):
 >

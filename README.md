@@ -252,7 +252,7 @@ dsh web
 - 发版后无需改任何脚本——`install.ps1` 会自动安装最新 Release tag。
 - `release.ps1` 内部会 `git add -A` 并提交，发版前先 `git status` 看一眼，别让临时截图 / 调试脚本跟着提交进去。
 
-> ⚠️ **推了 tag 不等于发布了版本。** `install.ps1` 取的是 GitHub 的 **Release**（`/releases/latest`），不是最新的 tag；插件市场看的也是 Release。所以只 `git push --tags` 而没建 Release，一键安装会**静默停在旧版**上——v1.6.1 ~ v1.6.3 就踩过这个坑：三个 tag 都在远端，Release 却还停在 v1.6.0，直到补建才对齐。
+> ⚠️ **推了 tag 不等于发布了版本。** `install.ps1` 取的是 GitHub 的 **Release**（`/releases/latest`），不是最新的 tag。（插件市场给的是 `dsh plugin --profile web add github:wjingshan/dsh-cost-gauge`——那是 git 安装，取**默认分支最新提交**，与 Release 无关。）所以只 `git push --tags` 而没建 Release，**走 `install.ps1` 一键安装的人会静默停在旧版**上——v1.6.1 ~ v1.6.3 就踩过这个坑：三个 tag 都在远端，Release 却还停在 v1.6.0，直到补建才对齐。
 >
 > 发完版确认三处对齐（tag / Release / `main`）：
 >
