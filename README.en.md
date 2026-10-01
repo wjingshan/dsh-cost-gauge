@@ -10,16 +10,17 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 
 | Expanded | Minimized | Public holiday |
 | --- | --- | --- |
-| <img src="docs/expanded.png" width="230" alt="Expanded: time dial with cost/balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> | <img src="docs/holiday.png" width="216" alt="Public holiday: all-green arc and Standard (Mid-Autumn Festival)"> |
+| <img src="docs/expanded.png" width="230" alt="Expanded: time dial with turn cost, session cost and balance"> | <img src="docs/mini.png" width="215" alt="Minimized: status lamp, countdown ring, cost/balance and model badge"> | <img src="docs/holiday.png" width="216" alt="Public holiday: all-green arc and Standard (Mid-Autumn Festival)"> |
 
-> Left: expanded (weekday peak — green/amber arcs, amber = peak band); middle: minimized (rate lamp + countdown ring + cost/balance + model badge); right: a **public holiday** (Mid-Autumn, 9-25) — the whole arc is green and the status reads "Standard (Mid-Autumn Festival)".
+> Left: expanded (weekday peak — green/amber arcs, amber = peak band; the bottom three rows are turn cost / session cost / balance); middle: minimized (rate lamp + countdown ring + cost/balance + model badge); right: a **public holiday** (Mid-Autumn, 9-25) — the whole arc is green and the status reads "Standard (Mid-Autumn Festival)".
 
-## What's new in v1.6.1 – v1.6.7
+## What's new in v1.6.1 – v1.6.8
 
-> Five batches: **v1.6.7** fixes the widget being **unclickable and undraggable in the desktop app** (Electron swallowed the top strip's mouse input as window dragging); **v1.6.6** brings back the **bar chart in the cost records panel** (buried by the glass backdrop layer since v1.6.0); **v1.6.5** slims down the **minimized capsule**; **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
+> Six batches: **v1.6.8** adds the **turn cost** and lets you switch what the compact states show; **v1.6.7** fixes the widget being **unclickable and undraggable in the desktop app** (Electron swallowed the top strip’s mouse input as window dragging); **v1.6.6** brings back the **bar chart in the cost records panel** (buried by the glass backdrop layer since v1.6.0); **v1.6.5** slims down the **minimized capsule**; **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
 
 | Version | Theme | In one line |
 | --- | --- | --- |
+| **v1.6.8** | 🧮 Turn cost | The expanded view gains a **turn cost** row (current turn only, under one cent shows `<0.01`); the minimized capsule and the docked strip can be switched between turn cost and session cost in settings |
 | **v1.6.7** | 🖱 Interactive in the desktop app | The DSH desktop shell lays a window-drag hot zone across the top of the window with `-webkit-app-region:drag`; a widget parked there has its mouse input consumed as window dragging — unclickable, undraggable |
 | **v1.6.6** | 📊 Bar chart regression | The glass backdrop layer and the chart's bars shared the class name `.dsg-bar`: the bars inherited `position:absolute; inset:0`, so 30 of them covered the whole chart area and the last, empty one hid all the others |
 | **v1.6.5** | 📏 Slimmer minimized capsule | Minimized size halved and the width now fits its content; the badge's slot class was being wiped by `setModelBadge`, which is why the right side had a blank gap |
@@ -27,6 +28,27 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 | **v1.6.3** | 💰 Cost display fix | 0.1.7 moved “which session is selected” out of the client `sessions` service, so the cost and the model badge stuck at `—`; now resolved from several sources |
 | **v1.6.2** | 🗓 Holiday display | Chinese statutory holidays (and weekend make-up workdays) are billed off-peak: all-green dial, switch instants that skip holidays, and status text that says why |
 | **v1.6.1** | 🧩 Compatibility | 0.1.7 dropped `data-dsh-frame` from the app frame — conversation-area geometry and sidebar-collapse detection broke; the frame is now derived by walking up from the columns |
+
+### v1.6.8 · Turn cost + a switchable compact display
+
+**New: the expanded view gains a “Turn cost” row, and the minimized capsule / docked strip can show either the turn cost or the session cost.**
+
+- **Turn cost** — counts the current turn only. On `turn/start` the host resets it to zero and accumulates every charge of that turn from there.
+- **Same pricing path as the session cost** — every event is priced at the rate and model in effect at its own timestamp (the exact same `priceAt` call the session cost uses), so the two numbers can never disagree in method.
+- **Under one cent shows `<0.01`**, so you never get a column of `¥0.00`. The session-cost row keeps its original `¥X.XX` format.
+- **Compact states are a choice** — a new setting, **“Show turn cost in the minimized capsule and strip”**, is off by default, which keeps the previous behaviour (both show the **session cost**). Both compact states follow it together, and hovering the number tells you which one you are looking at.
+- **The manual reset is independent** — “Reset session cost” only touches the session cost; the turn cost is unaffected.
+- **Replacement and retries are handled** — a repeated sample for the same `turn/step` replaces rather than accumulates (the official projection semantics), and `llm/retry-started` rollbacks are subtracted from the turn cost too.
+
+| State | Shows |
+| --- | --- |
+| Expanded | Turn cost / session cost / balance — three rows |
+| Minimized capsule, setting off (default) | Session cost |
+| Minimized capsule, setting on | Turn cost |
+| Docked strip | Always matches the minimized capsule |
+| Turn cost below ¥0.01 | `<0.01` |
+
+> The **host half** (turn accounting) and the **client half** (the new row and the setting) changed independently. The host half is pinned by DSH’s module cache, so it **needs a DSH restart**; the client half only needs a page refresh.
 
 ### v1.6.7 · Unclickable and undraggable in the desktop app (Electron read the mouse as window dragging)
 
@@ -252,6 +274,8 @@ Compatibility with **dsh 0.1.7**. That release **removed the `data-dsh-frame` at
 - 🧊 **Glass over the chat** (six settings) — the part reaching into the chat text turns into grey glass: translucent bars, a fully transparent middle background and a dial whose opacity equals its lightness; **the rest of the widget is untouched**.
 - 💰 **Session cost** — token usage priced with the official peak/off-peak rates (cache miss / cache hit / output priced separately).
   - **Per-event pricing**: usage produced during off-peak hours is charged at the off-peak rate and usage produced during peak hours at the peak rate, then summed. Entering the peak window does **not** re-price earlier off-peak usage.
+- 🧮 **Turn cost** — counts the current turn only, reset to zero when a turn starts, priced through the **same per-event path** as the session cost so the two always agree; under one cent it shows `<0.01`.
+  - **Compact states are switchable** — the “Show turn cost in the minimized capsule and strip” setting decides what the minimized capsule and the docked strip display (they keep showing the session cost by default).
 - 🧭 **Rate hand** — the dial shows the current rate band and the countdown to the next switch.
   - Peak (doubled): Mon–Fri 09:00–12:00 and 14:00–18:00 Beijing time
   - Off-peak (standard): all remaining hours, including the whole weekend; half the peak price
