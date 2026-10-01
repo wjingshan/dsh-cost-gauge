@@ -14,18 +14,39 @@ A **cost gauge** for DeepSeek Harness (`dsh`): a square floating window at the *
 
 > Left: expanded (weekday peak — green/amber arcs, amber = peak band); middle: minimized (rate lamp + countdown ring + cost/balance + model badge); right: a **public holiday** (Mid-Autumn, 9-25) — the whole arc is green and the status reads "Standard (Mid-Autumn Festival)".
 
-## What's new in v1.6.1 – v1.6.6
+## What's new in v1.6.1 – v1.6.7
 
-> Four batches: **v1.6.6** brings back the **bar chart in the cost records panel** (it had been buried by the glass backdrop layer since v1.6.0); **v1.6.5** slims down the **minimized capsule**; **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
+> Five batches: **v1.6.7** fixes the widget being **unclickable and undraggable in the desktop app** (Electron swallowed the top strip's mouse input as window dragging); **v1.6.6** brings back the **bar chart in the cost records panel** (buried by the glass backdrop layer since v1.6.0); **v1.6.5** slims down the **minimized capsule**; **v1.6.4** adds **edge snapping (dock as a vertical strip)**; **v1.6.1 – v1.6.3** was one round of **dsh 0.1.7** compatibility work — **compatibility**, **holiday display**, and the **cost display fix**.
 
 | Version | Theme | In one line |
 | --- | --- | --- |
+| **v1.6.7** | 🖱 Interactive in the desktop app | The DSH desktop shell lays a window-drag hot zone across the top of the window with `-webkit-app-region:drag`; a widget parked there has its mouse input consumed as window dragging — unclickable, undraggable |
 | **v1.6.6** | 📊 Bar chart regression | The glass backdrop layer and the chart's bars shared the class name `.dsg-bar`: the bars inherited `position:absolute; inset:0`, so 30 of them covered the whole chart area and the last, empty one hid all the others |
 | **v1.6.5** | 📏 Slimmer minimized capsule | Minimized size halved and the width now fits its content; the badge's slot class was being wiped by `setModelBadge`, which is why the right side had a blank gap |
 | **v1.6.4** | 🧲 Edge snapping | Drag the widget to the left or right edge and it snaps into a **docked vertical strip**; click it or drag it away to restore |
 | **v1.6.3** | 💰 Cost display fix | 0.1.7 moved “which session is selected” out of the client `sessions` service, so the cost and the model badge stuck at `—`; now resolved from several sources |
 | **v1.6.2** | 🗓 Holiday display | Chinese statutory holidays (and weekend make-up workdays) are billed off-peak: all-green dial, switch instants that skip holidays, and status text that says why |
 | **v1.6.1** | 🧩 Compatibility | 0.1.7 dropped `data-dsh-frame` from the app frame — conversation-area geometry and sidebar-collapse detection broke; the frame is now derived by walking up from the columns |
+
+### v1.6.7 · Unclickable and undraggable in the desktop app (Electron read the mouse as window dragging)
+
+**Fix: in the DSH desktop app (Electron, 0.2), a widget parked at the very top of the window could not be expanded by clicking, and dragging it dragged the whole application window instead.**
+
+The desktop shell lays a **window-drag hot zone** across the top of the window:
+
+```css
+[data-windows-titlebar] .frame:before{inset:0 0 auto;
+  height:var(--dsh-windows-titlebar-height);-webkit-app-region:drag}
+```
+
+Chromium treats that band as the window title bar: **mouse input landing inside it is handed to the OS for window dragging and never delivered to the page**. The widget position lives in `dsh-cost-gauge:pos`, and dragging it to the top clamps it to `y = 8` — the whole minimized capsule sat inside that band, so clicks never arrived (nothing expanded) and drags moved the window.
+
+A plain browser (`dsh web`) has no app-region concept and uses ordinary DOM hit-testing, which is why this only ever showed up in the desktop app.
+
+- Added `-webkit-app-region:no-drag;app-region:no-drag;` to `.dsg-root` and `.dsg-records`, carving the widget's own rectangle out of the hot zone.
+- The precedent is upstream's own: DSH's `position:fixed` sidebar toggle carries `-webkit-app-region:no-drag` for exactly this reason — a fixed element sitting over the hot zone has to declare `no-drag` itself.
+
+> Pure CSS, client half only — **no DSH restart needed**. The bundle gets a new rev, so **refresh the page once**. Verified against the running desktop host: the old rev returns 404 while the recomposed rev returns 200 carrying both declarations.
 
 ### v1.6.6 · The bar chart was buried by the backdrop layer (class-name collision)
 
