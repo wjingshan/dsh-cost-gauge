@@ -14,6 +14,7 @@
     "lib/ledger.js",
     "lib/holidays.js",
     "lib/client.js",
+    "lib/client.*.js",
     "cordis.patch.yml",
     "README.md"
   ],
