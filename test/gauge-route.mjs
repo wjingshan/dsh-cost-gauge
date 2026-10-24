@@ -61,7 +61,7 @@ try {
   eq('dial.kind', v2.dial.kind, 'window')
   ok('使用期：橙红弧从已用处画到末端', v2.dial.fromDeg > 0 && v2.dial.toDeg === 180 && v2.dial.color === '#e0432d',
      { from: v2.dial.fromDeg, to: v2.dial.toDeg, color: v2.dial.color })
-  eq('rows[0] labelKey', v2.rows[0].labelKey, 'minimaxRowFive')
+  eq('rows[0] labelKey', v2.rows[0].labelKey, 'quotaRowPrimary')
   eq('rows[0] 剩余 60%', v2.rows[0].spec, { kind: 'percent', value: 60 })
   eq('订阅制仍保留余额内环（既有 UI）', v2.balanceRing, { total: 1, threshold: 10 })
   eq('meta.version 透传', v2.meta.version, '9.9.9')
