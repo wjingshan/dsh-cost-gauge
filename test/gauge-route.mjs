@@ -59,10 +59,11 @@ try {
   const v2 = await svc2.gaugeView('sess-1')
   eq('mode', v2.mode, 'subscription')
   eq('dial.kind', v2.dial.kind, 'window')
-  eq('phase', v2.dial.phase, 'usable')
+  ok('使用期：橙红弧从已用处画到末端', v2.dial.fromDeg > 0 && v2.dial.toDeg === 180 && v2.dial.color === '#e0432d',
+     { from: v2.dial.fromDeg, to: v2.dial.toDeg, color: v2.dial.color })
   eq('rows[0] labelKey', v2.rows[0].labelKey, 'minimaxRowFive')
   eq('rows[0] 剩余 60%', v2.rows[0].spec, { kind: 'percent', value: 60 })
-  eq('订阅制不画余额内环', v2.balanceRing, null)
+  eq('订阅制仍保留余额内环（既有 UI）', v2.balanceRing, { total: 1, threshold: 10 })
   eq('meta.version 透传', v2.meta.version, '9.9.9')
 
   console.log('\n=== 按量计费模型不应去拉额度接口 ===')
