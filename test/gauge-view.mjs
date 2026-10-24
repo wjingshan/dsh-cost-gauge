@@ -52,7 +52,7 @@ eq('未知 → metered', detectMode('qwen-max'), 'metered')
 console.log('\n=== 骨架一致性 ===')
 const mv = buildMeteredView(deepseekState)
 const sv = buildSubscriptionView(mmxData, mmxState)
-const SKELETON = ['mode', 'meta', 'dial', 'ring', 'caption', 'rows', 'compact', 'balanceRing', 'tone', 'alarm']
+const SKELETON = ['mode', 'meta', 'dial', 'ring', 'caption', 'rows', 'compact', 'balanceRing', 'tone', 'alarm', 'hourglass']
 eq('metered 顶层键', Object.keys(mv).sort(), SKELETON.slice().sort())
 eq('subscription 顶层键', Object.keys(sv).sort(), SKELETON.slice().sort())
 eq('两者顶层键完全相同', Object.keys(mv).sort(), Object.keys(sv).sort())
@@ -146,6 +146,26 @@ eq('无会话 → 模型空', noSession.meta.model, '')
 const badBal = buildMeteredView({ ...deepseekState, balance: { available: false, error: '未配置 DeepSeek API Key' } })
 eq('余额失败 → 文案破折号 + 保留错误', [badBal.rows[2].spec.value, badBal.rows[2].spec.error], ['—', '未配置 DeepSeek API Key'])
 eq('余额失败 → 不画内环', badBal.balanceRing, null)
+
+/* ---------------- 后台沙漏 ---------------- */
+console.log('\n=== 后台沙漏（切到别的模型时的提醒）===')
+eq('当前是订阅制 → 不显示', buildGaugeView(mmxState, mmxData).hourglass, null)
+
+const dsWithQuota = buildGaugeView(deepseekState, mmxData)
+ok('当前是按量计费 → 显示', !!dsWithQuota.hourglass)
+eq('phase 取自订阅侧额度状态', dsWithQuota.hourglass.phase, 'usable')
+ok('elapsed 在 0..1', dsWithQuota.hourglass.elapsed >= 0 && dsWithQuota.hourglass.elapsed <= 1, dsWithQuota.hourglass.elapsed)
+ok('elapsed ≈ 0.2（窗口过了 20%）', Math.abs(dsWithQuota.hourglass.elapsed - 0.2) < 0.02, dsWithQuota.hourglass.elapsed)
+ok('untilResetMs 有值', dsWithQuota.hourglass.untilResetMs > 0)
+
+eq('没有额度数据 → 不显示', buildGaugeView(deepseekState, null).hourglass, null)
+eq('额度查询失败 → 不显示', buildGaugeView(deepseekState, { ok: false, enabled: true, error: 'x' }).hourglass, null)
+
+const coolingHg = buildGaugeView(deepseekState, {
+  ...mmxData,
+  windows: { ...mmxData.windows, five: { ...mmxData.windows.five, usedPercent: 100 } },
+})
+eq('额度用尽 → phase cooling', coolingHg.hourglass.phase, 'cooling')
 
 /* ---------------- 入口分发 ---------------- */
 console.log('\n=== buildGaugeView 分发 ===')

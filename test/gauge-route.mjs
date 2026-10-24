@@ -33,7 +33,7 @@ try {
   ok('ring.fraction 是 0..1 的数', v1.ring.fraction >= 0 && v1.ring.fraction <= 1, v1.ring.fraction)
 
   console.log('\n=== 形状必须稳定（UI 靠它渲染）===')
-  const KEYS = ['mode', 'meta', 'dial', 'ring', 'caption', 'rows', 'compact', 'balanceRing', 'tone', 'alarm']
+  const KEYS = ['mode', 'meta', 'dial', 'ring', 'caption', 'rows', 'compact', 'balanceRing', 'tone', 'alarm', 'hourglass']
   eq('顶层键集合', Object.keys(v1).sort(), KEYS.slice().sort())
 
   console.log('\n=== 序列化后可直接喂给浏览器 ===')
@@ -66,12 +66,13 @@ try {
   eq('订阅制仍保留余额内环（既有 UI）', v2.balanceRing, { total: 1, threshold: 10 })
   eq('meta.version 透传', v2.meta.version, '9.9.9')
 
-  console.log('\n=== 按量计费模型不应去拉额度接口 ===')
+  console.log('\n=== 额度总是拉一次（后台沙漏需要）===')
   let quotaCalled = false
   const svc3 = new CostGaugeService(fakeCtx, {})
   svc3.minimaxView = async () => { quotaCalled = true; return null }
   await svc3.gaugeView(undefined)
-  eq('未调用 minimaxView', quotaCalled, false)
+  eq('按量计费模型也调用 minimaxView', quotaCalled, true)
+  eq('无额度数据时沙漏为空', (await svc3.gaugeView(undefined)).hourglass, null)
 
   console.log(`\n${pass} passed, ${fail} failed`)
 } finally {
