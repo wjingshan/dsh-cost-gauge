@@ -1,0 +1,261 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "compare",
+  "type": "architecture",
+  "comparatorVersion": 1,
+  "canonicalVersion": 1,
+  "completeness": "complete",
+  "proofLevel": "authored",
+  "base": {
+    "title": "改造前 — UI 直读各平台字段",
+    "rawSha256": "adfe4187959a4d6b743073d8dd65473e5f0d2d6051d4f742d97b9fa8b65f41d9",
+    "semanticSha256": "4302880b655633f87dec23aae181cee6fe6d4d8ca04590415a26a40081689662",
+    "bytes": 1340
+  },
+  "head": {
+    "title": "改造后 — 归一化层隔离模型差异",
+    "rawSha256": "ac516639c782fde66c184dc51854cb98b7438591308f3e343127a3e3d7ded43f",
+    "semanticSha256": "313f7225679f8cebed57b4708d035cf9e6f3d9eaf7f7f1af414e47e255137efa",
+    "bytes": 1996
+  },
+  "summary": {
+    "components": {
+      "added": 4,
+      "changed": 1,
+      "evidenceChanged": 0,
+      "removed": 2,
+      "moved": 0
+    },
+    "connections": {
+      "added": 2,
+      "changed": 4,
+      "removed": 0,
+      "rerouted": 0
+    },
+    "boundaries": {
+      "added": 1,
+      "changed": 0,
+      "removed": 0,
+      "geometryChanged": 0
+    },
+    "presentationChanged": true,
+    "provenanceChanged": false
+  },
+  "changes": {
+    "components": [
+      {
+        "id": "browser",
+        "baseLabel": "浏览器 UI",
+        "headLabel": "浏览器 UI",
+        "status": "changed",
+        "classifications": [
+          "semantic"
+        ],
+        "changedFields": [
+          "/sublabel"
+        ]
+      },
+      {
+        "id": "gauge",
+        "headLabel": "/gauge",
+        "status": "added",
+        "classifications": [
+          "semantic"
+        ],
+        "changedFields": []
+      },
+      {
+        "id": "metered",
+        "headLabel": "按量计费 adapter",
+        "status": "added",
+        "classifications": [
+          "semantic"
+        ],
+        "changedFields": []
+      },
+      {
+        "id": "quota",
+        "baseLabel": "/minimax",
+        "status": "removed",
+        "classifications": [
+          "semantic"
+        ],
+        "changedFields": []
+      },
+      {
+        "id": "state",
+        "baseLabel": "/state",
+        "status": "removed",
+        "classifications": [
+          "semantic"
+        ],
+        "changedFields": []
+      },
+      {
+        "id": "subscription",
+        "headLabel": "订阅制 adapter",
+        "status": "added",
+        "classifications": [
+          "semantic"
+        ],
+        "changedFields": []
+      },
+      {
+        "id": "view",
+        "headLabel": "gauge-view.js",
+        "status": "added",
+        "classifications": [
+          "semantic"
+        ],
+        "changedFields": []
+      }
+    ],
+    "connections": [
+      {
+        "id": "metered-src",
+        "head": {
+          "from": "view",
+          "to": "metered",
+          "label": ""
+        },
+        "status": "added",
+        "classifications": [
+          "topology"
+        ],
+        "changedFields": []
+      },
+      {
+        "id": "poll-quota",
+        "base": {
+          "from": "browser",
+          "to": "quota",
+          "label": "轮询 60s"
+        },
+        "head": {
+          "from": "gauge",
+          "to": "view",
+          "label": "state + quota"
+        },
+        "status": "changed",
+        "classifications": [
+          "semantic",
+          "topology"
+        ],
+        "changedFields": [
+          "/from",
+          "/label",
+          "/to",
+          "/variant"
+        ]
+      },
+      {
+        "id": "poll-state",
+        "base": {
+          "from": "browser",
+          "to": "state",
+          "label": "轮询 5s"
+        },
+        "head": {
+          "from": "browser",
+          "to": "gauge",
+          "label": "轮询 5s"
+        },
+        "status": "changed",
+        "classifications": [
+          "topology"
+        ],
+        "changedFields": [
+          "/to"
+        ]
+      },
+      {
+        "id": "quota-remains",
+        "base": {
+          "from": "quota",
+          "to": "mm_api",
+          "label": "GET /token_plan/remains"
+        },
+        "head": {
+          "from": "subscription",
+          "to": "mm_api",
+          "label": "GET /token_plan/remains"
+        },
+        "status": "changed",
+        "classifications": [
+          "topology"
+        ],
+        "changedFields": [
+          "/from"
+        ]
+      },
+      {
+        "id": "state-balance",
+        "base": {
+          "from": "state",
+          "to": "ds_api",
+          "label": "GET /user/balance"
+        },
+        "head": {
+          "from": "metered",
+          "to": "ds_api",
+          "label": "GET /user/balance"
+        },
+        "status": "changed",
+        "classifications": [
+          "topology"
+        ],
+        "changedFields": [
+          "/from"
+        ]
+      },
+      {
+        "id": "subscription-src",
+        "head": {
+          "from": "view",
+          "to": "subscription",
+          "label": ""
+        },
+        "status": "added",
+        "classifications": [
+          "topology"
+        ],
+        "changedFields": []
+      }
+    ],
+    "boundaries": [
+      {
+        "key": "region:服务端 · 唯一知道模型的地方",
+        "kind": "region",
+        "label": "服务端 · 唯一知道模型的地方",
+        "status": "added",
+        "classifications": [
+          "scope"
+        ],
+        "changedFields": []
+      }
+    ]
+  },
+  "identity": {
+    "components": "components[].id",
+    "connections": "connections[].id (required)",
+    "boundaries": "boundaries[].kind + boundaries[].label (derived)"
+  },
+  "view": {
+    "visualPreset": "classic"
+  },
+  "limitations": [
+    "Authored Architecture IR only; no runtime impact, causality, risk, or mergeability is inferred.",
+    "Boundary identity is conservatively derived from kind + label."
+  ],
+  "artifact": {
+    "sha256": "53f3c28656d8197718178aa56bbc9d8f9a5d850781de7257142b6aeb9fa3d988",
+    "bytes": 1820194
+  },
+  "validation": {
+    "checksPassed": 28,
+    "checkCount": 28,
+    "baseComposition": "pass",
+    "headComposition": "pass"
+  }
+}

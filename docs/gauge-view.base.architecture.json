@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "改造前 — UI 直读各平台字段",
+    "quality_profile": "showcase",
+    "viewBox": [1500, 430]
+  },
+  "components": [
+    { "id": "browser", "type": "frontend", "label": "浏览器 UI", "sublabel": "client.js · isMiniMaxModel ×6", "pos": [60, 177], "size": [150, 66] },
+    { "id": "state", "type": "backend", "label": "/state", "sublabel": "DeepSeek 形状", "pos": [440, 60], "size": [150, 66] },
+    { "id": "quota", "type": "backend", "label": "/minimax", "sublabel": "MiniMax 形状", "pos": [440, 300], "size": [150, 66] },
+    { "id": "ds_api", "type": "external", "label": "DeepSeek API", "sublabel": "余额 + token 计价", "pos": [1240, 60], "size": [160, 66] },
+    { "id": "mm_api", "type": "external", "label": "MiniMax API", "sublabel": "额度窗口", "pos": [1240, 300], "size": [160, 66] }
+  ],
+  "connections": [
+    { "id": "poll-state", "from": "browser", "to": "state", "label": "轮询 5s", "variant": "emphasis" },
+    { "id": "poll-quota", "from": "browser", "to": "quota", "label": "轮询 60s", "variant": "emphasis" },
+    { "id": "state-balance", "from": "state", "to": "ds_api", "label": "GET /user/balance" },
+    { "id": "quota-remains", "from": "quota", "to": "mm_api", "label": "GET /token_plan/remains" }
+  ]
+}

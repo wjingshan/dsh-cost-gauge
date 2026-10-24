@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "改造后 — 归一化层隔离模型差异",
+    "quality_profile": "showcase",
+    "viewBox": [1500, 430]
+  },
+  "components": [
+    { "id": "browser", "type": "frontend", "label": "浏览器 UI", "sublabel": "client.js · 零模型判断", "pos": [60, 177], "size": [150, 66] },
+    { "id": "gauge", "type": "backend", "label": "/gauge", "sublabel": "归一化视图", "pos": [360, 177], "size": [150, 66], "tag": "新增" },
+    { "id": "view", "type": "security", "label": "gauge-view.js", "sublabel": "detectMode 分发", "pos": [640, 177], "size": [170, 66], "tag": "新增" },
+    { "id": "metered", "type": "backend", "label": "按量计费 adapter", "sublabel": "buildMeteredView", "pos": [900, 60], "size": [180, 66], "tag": "新增" },
+    { "id": "subscription", "type": "backend", "label": "订阅制 adapter", "sublabel": "buildSubscriptionView", "pos": [900, 300], "size": [180, 66], "tag": "新增" },
+    { "id": "ds_api", "type": "external", "label": "DeepSeek API", "sublabel": "余额 + token 计价", "pos": [1240, 60], "size": [160, 66] },
+    { "id": "mm_api", "type": "external", "label": "MiniMax API", "sublabel": "额度窗口", "pos": [1240, 300], "size": [160, 66] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "服务端 · 唯一知道模型的地方", "wraps": ["gauge", "view", "metered", "subscription"] }
+  ],
+  "connections": [
+    { "id": "poll-state", "from": "browser", "to": "gauge", "label": "轮询 5s", "variant": "emphasis" },
+    { "id": "poll-quota", "from": "gauge", "to": "view", "label": "state + quota" },
+    { "id": "metered-src", "from": "view", "to": "metered" },
+    { "id": "subscription-src", "from": "view", "to": "subscription" },
+    { "id": "state-balance", "from": "metered", "to": "ds_api", "label": "GET /user/balance" },
+    { "id": "quota-remains", "from": "subscription", "to": "mm_api", "label": "GET /token_plan/remains" }
+  ]
+}
