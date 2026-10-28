@@ -4,3 +4,6 @@ node_modules/
 .idea/
 .vscode/
 _identify-dsg-root.png
+
+# 本地测试产物（跑宿主时的日志、截图、架构图、临时验证页）
+.dsh-wiring/
