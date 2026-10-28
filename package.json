@@ -16,7 +16,6 @@
     "lib/minimax.js",
     "lib/gauge-view.js",
     "lib/client.js",
-    "lib/client.*.js",
     "cordis.patch.yml",
     "README.md"
   ],
